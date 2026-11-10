@@ -1,0 +1,1208 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>منارات المتحدة | نظام المقايسات والتسعير</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --navy:#0f2a4d; --navy2:#173b70; --navy3:#1f4d8c;
+  --gold:#b48a40; --gold2:#c6a45c; --gold3:#f0dfb5;
+  --bg:#eef2f8; --card:#ffffff; --line:#dde5f0; --ink:#172c4c; --muted:#63758c;
+  --green:#1e7a4f; --green-bg:#e6f5ee; --red:#b3372f; --red-bg:#fdecea;
+  --amber:#9a6200; --amber-bg:#fff3dd; --blue-bg:#e9f1fc;
+  --radius:14px; --shadow:0 2px 14px rgba(20,45,75,.07);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:'Cairo',Tahoma,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+button{font-family:inherit}
+input,select,textarea{font-family:inherit;border:1px solid #c9d5e4;border-radius:9px;padding:10px 12px;width:100%;font-size:14px;background:#fff;color:var(--ink);transition:border-color .15s, box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--navy3);box-shadow:0 0 0 3px rgba(31,77,140,.12)}
+input[readonly]{background:#f4f7fb;color:#33465f}
+label{font-size:12.5px;font-weight:700;display:block;margin-bottom:6px;color:#2c4262}
+.hidden{display:none!important}
+.muted{color:var(--muted)}
+.money{direction:ltr;text-align:left;font-variant-numeric:tabular-nums}
+.num{direction:ltr;text-align:left;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* ---------- الهيكل العام ---------- */
+#app{display:flex;min-height:100vh}
+#sidebar{width:248px;flex:none;background:linear-gradient(180deg,#0c2342 0%,#123055 60%,#173a66 100%);color:#dfe9f5;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;z-index:20}
+.side-brand{padding:22px 18px 16px;border-bottom:1px solid rgba(255,255,255,.1)}
+.side-brand .logo{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--gold),#8a6a2e);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:10px;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.side-brand h1{font-size:15px;margin:0;color:#fff;font-weight:800}
+.side-brand .sub{font-size:11px;color:var(--gold3);margin-top:3px}
+.side-nav{flex:1;padding:14px 10px;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:11px;width:100%;text-align:right;background:transparent;border:0;color:#c3d3e8;padding:11px 13px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;margin-bottom:4px;transition:background .15s,color .15s}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-item.active{background:linear-gradient(90deg,rgba(198,164,92,.25),rgba(198,164,92,.08));color:#fff;border-right:3px solid var(--gold2)}
+.nav-item .ic{font-size:17px;width:22px;text-align:center}
+.side-foot{padding:14px 16px;font-size:10.5px;color:#7e93ad;border-top:1px solid rgba(255,255,255,.08)}
+#main{flex:1;min-width:0;display:flex;flex-direction:column}
+#topbar{background:#fff;border-bottom:1px solid var(--line);padding:13px 26px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:15}
+#viewTitle{font-size:19px;font-weight:800;color:var(--navy);margin:0}
+#topbar .spacer{flex:1}
+.topbar-project{display:flex;align-items:center;gap:8px}
+.topbar-project select{max-width:280px;padding:8px 10px;font-size:13px}
+main{flex:1;padding:24px 26px 60px;max-width:1360px;width:100%;margin:0 auto}
+.view{animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ---------- مكونات ---------- */
+.card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:20px;border:1px solid #e6ecf4}
+.card-title{font-size:16px;font-weight:800;color:var(--navy);margin:0 0 14px;display:flex;align-items:center;gap:8px}
+.card-title .dot{width:9px;height:9px;border-radius:3px;background:var(--gold);flex:none}
+.btn{border:0;border-radius:9px;padding:10px 18px;background:var(--navy2);color:#fff;cursor:pointer;font-size:13.5px;font-weight:700;display:inline-flex;align-items:center;gap:7px;transition:filter .15s, transform .1s;white-space:nowrap}
+.btn:hover{filter:brightness(1.12)}
+.btn:active{transform:scale(.98)}
+.btn.secondary{background:#e9eef6;color:var(--navy2)}
+.btn.gold{background:var(--gold)}
+.btn.danger{background:var(--red)}
+.btn.green{background:var(--green)}
+.btn.ghost{background:transparent;color:var(--navy2);border:1px solid #c3d0e2}
+.btn.sm{padding:6px 11px;font-size:12px;border-radius:7px}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:13px}
+.tile{border:1px solid var(--line);background:#fff;padding:20px 12px;cursor:pointer;border-radius:12px;text-align:center;min-height:96px;font-weight:700;color:var(--navy2);transition:transform .18s,box-shadow .18s,border-color .18s;font-family:inherit;font-size:13.5px}
+.tile:hover{background:#f4f8fd;border-color:var(--gold2);transform:translateY(-3px);box-shadow:0 8px 22px rgba(21,61,108,.12)}
+.tile .ic{display:block;font-size:26px;margin-bottom:9px}
+.tile small{display:block;font-weight:500;color:var(--muted);margin-top:5px;font-size:11.5px}
+.tile.back{background:#f7f9fc;border-style:dashed;color:var(--muted)}
+.crumb{color:#4a6b94;margin-bottom:13px;font-size:13px;font-weight:600}
+
+/* جداول */
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:11px}
+table{border-collapse:collapse;width:100%;min-width:820px;background:#fff}
+th,td{border-bottom:1px solid #e6ecf4;padding:9px 10px;text-align:right;vertical-align:middle;font-size:13px}
+th{background:#f0f5fb;font-weight:800;color:#28456b;white-space:nowrap;position:sticky;top:0}
+tbody tr:hover{background:#f7fafd}
+tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
+
+/* شارات الحالة */
+.badge{display:inline-block;padding:3px 11px;border-radius:20px;font-size:11.5px;font-weight:700;white-space:nowrap}
+.badge.مسودة{background:#eef1f6;color:#5b6b80}
+.badge.قيد-التسعير{background:var(--blue-bg);color:#1f4d8c}
+.badge.معتمد{background:var(--green-bg);color:var(--green)}
+.badge.قيد-التنفيذ{background:var(--amber-bg);color:var(--amber)}
+.badge.منفذ{background:#e8f0fe;color:#2451b3}
+.badge.ملغي{background:var(--red-bg);color:var(--red)}
+
+/* مؤشرات لوحة التحكم */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:20px}
+.kpi{background:#fff;border-radius:var(--radius);padding:17px 18px;box-shadow:var(--shadow);border:1px solid #e6ecf4;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;right:0;width:4px;height:100%;background:var(--gold)}
+.kpi .k-label{font-size:12px;color:var(--muted);font-weight:600}
+.kpi .k-value{font-size:23px;font-weight:900;color:var(--navy);margin-top:5px;direction:ltr;text-align:right;font-variant-numeric:tabular-nums}
+.kpi .k-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.charts-row{display:grid;grid-template-columns:1fr 1.4fr;gap:20px;margin-bottom:20px}
+@media(max-width:1000px){.charts-row{grid-template-columns:1fr}}
+.chart-box{height:290px;position:relative}
+
+/* ملخص المشروع */
+.chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:10px;margin:14px 0}
+.chip{background:#f0f5fc;border:1px solid #d8e5f5;border-radius:10px;padding:9px 12px}
+.chip .c-label{display:block;font-size:11.5px;color:#536b88;margin-bottom:3px}
+.chip .c-value{display:block;font-size:14.5px;font-weight:800;color:var(--navy);direction:ltr;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.chip.hero{background:linear-gradient(120deg,#12345e,#1f4d8c);border-color:#12345e}
+.chip.hero .c-label{color:#b9cde6}
+.chip.hero .c-value{color:#fff}
+
+/* لوحة التسعير */
+.pricing-panel{margin-top:16px;padding:18px;border:1px solid #dce5f0;border-radius:14px;background:#fbfdff}
+.p-section{font-size:13.5px;font-weight:800;color:var(--navy2);margin:0 0 11px;display:flex;align-items:center;gap:7px}
+.p-sep{margin-top:16px;padding-top:14px;border-top:1px dashed #d3dfee}
+.p-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.p-grid.g5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.p-field{min-width:0;display:flex;flex-direction:column;padding:11px;background:#fff;border:1px solid #e0e8f2;border-radius:11px}
+.p-field label{font-size:11.5px;margin-bottom:8px;min-height:32px}
+.p-field input{height:40px;font-size:14px;padding:8px 10px}
+.p-field.ref{background:#fff7e3;border-color:#d9b86e}
+.p-field.ref input{background:#fffbef;font-weight:700;color:#79581a}
+.p-field.calc{background:#edf5ff;border-color:#b8d2f0}
+.p-field.calc input{background:transparent;border:0;font-weight:800;color:var(--navy2);box-shadow:none}
+.p-field.grand{background:linear-gradient(135deg,#12345e,#1f4d8c);border-color:#12345e}
+.p-field.grand label{color:#b9cde6}
+.p-field.grand input{background:transparent;border:0;color:#fff;font-weight:900;font-size:16px;box-shadow:none}
+.p-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.mode-switch{display:inline-flex;background:#e9eef6;border-radius:10px;padding:3px;margin-bottom:13px}
+.mode-switch button{border:0;background:transparent;padding:8px 18px;border-radius:8px;font-weight:700;font-size:13px;color:#5b6b80;cursor:pointer}
+.mode-switch button.active{background:#fff;color:var(--navy2);box-shadow:0 1px 5px rgba(0,0,0,.12)}
+#compareBox{margin-top:12px}
+.price-warning{background:var(--amber-bg);color:var(--amber);border:1px solid #f1bb65;border-radius:9px;padding:11px 13px;font-size:13px;font-weight:600}
+.price-good{background:var(--green-bg);color:var(--green);border:1px solid #a9d8c2;border-radius:9px;padding:11px 13px;font-size:13px;font-weight:600}
+
+/* منتقي البنود */
+.item-picker{position:relative;width:100%}
+.picker-trigger{width:100%;background:#fff;border:1px solid #c9d5e4;border-radius:9px;padding:10px 12px;text-align:right;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;font-weight:600;cursor:pointer;line-height:1.6;color:var(--ink)}
+.picker-trigger:hover{border-color:var(--navy3)}
+.picker-trigger .chosen{flex:1;min-width:0;white-space:normal;overflow-wrap:anywhere}
+.picker-menu{position:absolute;top:calc(100% + 4px);right:0;left:0;z-index:60;max-height:330px;overflow-y:auto;background:#fff;border:1px solid #b7c9df;border-radius:10px;box-shadow:0 12px 30px rgba(20,45,75,.18);padding:4px}
+.picker-opt{display:block;width:100%;text-align:right;background:#fff;color:var(--ink);border:0;border-radius:6px;padding:8px 10px;font-size:12.5px;line-height:1.65;white-space:normal;cursor:pointer}
+.picker-opt:hover{background:#edf3fc}
+.picker-opt[aria-selected="true"]{background:#e4efff;color:#123d73;font-weight:800}
+
+/* تنبيهات ونوافذ */
+#toast{position:fixed;bottom:20px;left:20px;z-index:200;display:flex;flex-direction:column;gap:8px;max-width:420px}
+.toast{background:var(--navy);color:#fff;border-radius:10px;padding:12px 16px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);animation:toastIn .25s ease}
+.toast.err{background:var(--red)}
+.toast.ok{background:var(--green)}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1}}
+.modal-backdrop{position:fixed;inset:0;background:rgba(15,32,55,.5);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:620px;max-height:90vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:fadeIn .2s}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.modal-head h3{margin:0;font-size:16px;color:var(--navy)}
+.modal-body{padding:20px}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-start}
+.modal-x{background:none;border:0;font-size:20px;cursor:pointer;color:var(--muted);line-height:1}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.fields .full{grid-column:1/-1}
+
+/* شاشة فارغة */
+.empty{text-align:center;padding:44px 20px;color:var(--muted)}
+.empty .ic{font-size:42px;display:block;margin-bottom:12px}
+
+/* تحميل */
+#splash{position:fixed;inset:0;background:linear-gradient(135deg,#0c2342,#173a66);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff}
+#splash .logo{width:74px;height:74px;border-radius:18px;background:linear-gradient(135deg,var(--gold),#8a6a2e);display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:18px}
+#splash h1{font-size:20px;margin:0 0 6px}
+#splash p{color:#b9cde6;font-size:13px}
+.spinner{width:34px;height:34px;border:3px solid rgba(255,255,255,.2);border-top-color:var(--gold2);border-radius:50%;animation:spin .8s linear infinite;margin-top:18px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin-inline{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+
+/* تقارير */
+.report-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.report-card{border:1px solid var(--line);border-radius:14px;padding:20px;text-align:center;background:#fff;transition:transform .15s, box-shadow .15s}
+.report-card:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(21,61,108,.12)}
+.report-card .ic{font-size:36px;display:block;margin-bottom:10px}
+.report-card h3{margin:0 0 6px;font-size:15px;color:var(--navy)}
+.report-card p{font-size:12px;color:var(--muted);margin:0 0 14px;min-height:34px}
+
+@media(max-width:900px){
+  #sidebar{width:64px}
+  #sidebar .side-brand h1,#sidebar .side-brand .sub,#sidebar .side-foot,#sidebar .nav-label{display:none}
+  .nav-item{justify-content:center;padding:12px}
+  .p-grid,.p-grid.g5{grid-template-columns:repeat(2,minmax(0,1fr))}
+  main{padding:16px 12px 50px}
+}
+@media(max-width:560px){.p-grid,.p-grid.g5{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <div class="logo">🏗️</div>
+  <h1>شركة منارات المتحدة للمقاولات العامة للمباني</h1>
+  <p>نظام إعداد المقايسات وعروض الأسعار — النسخة الاحترافية</p>
+  <div class="spinner"></div>
+</div>
+
+<div id="app" class="hidden">
+  <aside id="sidebar">
+    <div class="side-brand">
+      <div class="logo">🏗️</div>
+      <h1>منارات المتحدة</h1>
+      <div class="sub">نظام المقايسات والتسعير v3.1</div>
+    </div>
+    <nav class="side-nav" id="sideNav">
+      <button class="nav-item active" data-view="dashboard"><span class="ic">📊</span><span class="nav-label">لوحة التحكم</span></button>
+      <button class="nav-item" data-view="projects"><span class="ic">📁</span><span class="nav-label">المشروعات</span></button>
+      <button class="nav-item" data-view="pricing"><span class="ic">🧮</span><span class="nav-label">التسعير والمقايسة</span></button>
+      <button class="nav-item" data-view="catalog"><span class="ic">📚</span><span class="nav-label">دليل البنود</span></button>
+      <button class="nav-item" data-view="reports"><span class="ic">🖨️</span><span class="nav-label">التقارير والطباعة</span></button>
+      <button class="nav-item" data-view="settings"><span class="ic">⚙️</span><span class="nav-label">الإعدادات</span></button>
+    </nav>
+    <div class="side-foot">شركة منارات المتحدة للمقاولات العامة للمباني<br>جميع البيانات محفوظة في Google Sheets</div>
+  </aside>
+
+  <div id="main">
+    <header id="topbar">
+      <h2 id="viewTitle">لوحة التحكم</h2>
+      <div class="spacer"></div>
+      <div class="topbar-project">
+        <label style="margin:0;font-size:12px">المشروع الحالي:</label>
+        <select id="globalProject" onchange="onGlobalProject()"><option value="">— لم يُختر مشروع —</option></select>
+      </div>
+      <button class="btn secondary sm" onclick="refreshAll()" title="تحديث البيانات">↻ تحديث</button>
+    </header>
+
+    <main>
+      <!-- لوحة التحكم -->
+      <section id="view-dashboard" class="view">
+        <div class="kpi-row" id="kpiRow"></div>
+        <div class="charts-row">
+          <div class="card"><h3 class="card-title"><span class="dot"></span>توزيع بنود الدليل حسب الأبواب</h3><div class="chart-box"><canvas id="chartChapters"></canvas></div></div>
+          <div class="card"><h3 class="card-title"><span class="dot"></span>أعلى المشاريع قيمةً (د.ك)</h3><div class="chart-box"><canvas id="chartTop"></canvas></div></div>
+        </div>
+        <div class="card">
+          <h3 class="card-title"><span class="dot"></span>أحدث المشروعات</h3>
+          <div class="table-wrap"><table><thead><tr><th>المشروع</th><th>العميل</th><th>الحالة</th><th>عدد البنود</th><th>القيمة الإجمالية (د.ك)</th><th></th></tr></thead><tbody id="recentTbody"></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- المشروعات -->
+      <section id="view-projects" class="view hidden">
+        <div class="card">
+          <div class="toolbar">
+            <input id="projSearch" placeholder="🔍 بحث باسم المشروع أو العميل" style="max-width:280px" oninput="renderProjectsTable()">
+            <select id="projStatusFilter" style="max-width:170px" onchange="renderProjectsTable()"><option value="">كل الحالات</option></select>
+            <button class="btn" onclick="openProjectModal()">✚ مشروع جديد</button>
+          </div>
+          <div class="table-wrap"><table><thead><tr><th>م</th><th>اسم المشروع</th><th>العميل</th><th>الحالة</th><th>النسب (م/ر/ض)</th><th>البنود</th><th>قيمة البيع (د.ك)</th><th>التكلفة (د.ك)</th><th>إجراءات</th></tr></thead><tbody id="projectsTbody"></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- التسعير -->
+      <section id="view-pricing" class="view hidden">
+        <div id="pricingNoProject" class="card empty hidden">
+          <span class="ic">📁</span>
+          اختر مشروعاً من الأعلى أو أنشئ مشروعاً جديداً لبدء التسعير
+          <div style="margin-top:14px"><button class="btn" onclick="openProjectModal()">✚ مشروع جديد</button></div>
+        </div>
+
+        <div id="pricingMain">
+          <div class="card">
+            <h3 class="card-title"><span class="dot"></span>ملخص المقايسة الحالية <span id="pricingProjName" class="muted" style="font-weight:600"></span></h3>
+            <div class="chips" id="prjChips"></div>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title"><span class="dot"></span>اختيار البند من الدليل</h3>
+            <div class="crumb" id="crumb">اختر الباب الرئيسي من التصنيفات</div>
+            <div id="chaptersGrid" class="grid"></div>
+            <div id="subsGrid" class="grid hidden"></div>
+            <div id="itemArea" class="hidden">
+              <div class="toolbar" style="margin-top:4px">
+                <input id="itemSearch" placeholder="🔍 بحث بالرقم أو الوصف" style="max-width:300px" oninput="renderItems()">
+                <button class="btn secondary sm" onclick="backSubs()">↩ رجوع للتصنيفات</button>
+              </div>
+              <div class="item-picker" id="itemPicker">
+                <button type="button" class="picker-trigger" id="pickerTrigger" aria-expanded="false" onclick="togglePicker()">
+                  <span class="chosen" id="pickerLabel">اختر البند...</span><span>▼</span>
+                </button>
+                <div id="pickerMenu" class="picker-menu hidden" role="listbox"></div>
+              </div>
+              <div id="itemDesc" class="muted" style="font-size:12.5px;margin-top:8px;line-height:1.8"></div>
+
+              <div class="pricing-panel" id="pricingPanel">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+                  <div class="p-section" style="margin:0">① الكمية وبيانات التكلفة</div>
+                  <div class="mode-switch">
+                    <button type="button" id="modeBD" class="active" onclick="setCostMode('bd')">تكلفة تفصيلية</button>
+                    <button type="button" id="modeManual" onclick="setCostMode('manual')">تكلفة إجمالية يدوية</button>
+                  </div>
+                </div>
+                <div class="p-grid" style="margin-top:12px">
+                  <div class="p-field"><label>وحدة القياس</label><input id="pUnit" readonly></div>
+                  <div class="p-field"><label>الكمية / المساحة / العدد</label><input id="pQty" type="number" min="0" step="any" value="1" oninput="updateCalc()"></div>
+                  <div class="p-field ref"><label>السعر الاسترشادي (د.ك)</label><input id="pRef" class="money" readonly></div>
+                  <div class="p-field calc"><label>تكلفة الوحدة المحسوبة (د.ك)</label><input id="pUnitCost" class="money" readonly></div>
+                </div>
+                <div id="bdInputs" class="p-grid g5" style="margin-top:12px">
+                  <div class="p-field"><label>🧱 تكلفة المواد / الوحدة</label><input id="cMat" type="number" min="0" step="any" oninput="updateCalc()"></div>
+                  <div class="p-field"><label>👷 تكلفة العمالة / الوحدة</label><input id="cLab" type="number" min="0" step="any" oninput="updateCalc()"></div>
+                  <div class="p-field"><label>🚜 تكلفة المعدات / الوحدة</label><input id="cEq" type="number" min="0" step="any" oninput="updateCalc()"></div>
+                  <div class="p-field"><label>🤝 مقاول الباطن / الوحدة</label><input id="cSub" type="number" min="0" step="any" oninput="updateCalc()"></div>
+                  <div class="p-field"><label>نسبة الهالك والفاقد %</label><input id="cWaste" type="number" min="0" step="any" value="0" oninput="updateCalc()"></div>
+                </div>
+                <div id="manualInput" class="p-grid hidden" style="margin-top:12px">
+                  <div class="p-field"><label>تكلفة الوحدة الإجمالية (د.ك) — إدخال يدوي</label><input id="cManual" type="number" min="0" step="any" placeholder="أدخل سعر التكلفة" oninput="updateCalc()"></div>
+                </div>
+
+                <div class="p-section p-sep">② نسب التسعير والنتيجة</div>
+                <div class="p-grid">
+                  <div class="p-field"><label>المصاريف الإدارية %</label><input id="rOver" type="number" min="0" step="any" oninput="updateCalc()"></div>
+                  <div class="p-field"><label>هامش الربح %</label><input id="rProfit" type="number" min="0" step="any" oninput="updateCalc()"></div>
+                  <div class="p-field"><label>خصم على البيع % (اختياري)</label><input id="rDisc" type="number" min="0" step="any" value="0" oninput="updateCalc()"></div>
+                  <div class="p-field calc"><label>سعر بيع الوحدة شامل النسب (د.ك)</label><input id="oPrice" class="money" readonly></div>
+                </div>
+                <div class="p-grid" style="margin-top:12px">
+                  <div class="p-field grand"><label>إجمالي قيمة البند (د.ك)</label><input id="oTotal" class="money" readonly></div>
+                  <div class="p-field calc"><label>ربح الوحدة (د.ك)</label><input id="oMarginU" class="money" readonly></div>
+                  <div class="p-field calc"><label>هامش الربح من البيع %</label><input id="oMarginPct" class="money" readonly></div>
+                  <div class="p-field"><label>ملاحظة على البند (اختياري)</label><input id="pNote" placeholder="مثال: يشمل النقل"></div>
+                </div>
+                <div id="compareBox"></div>
+                <div class="p-actions">
+                  <button class="btn" id="btnSaveLine" onclick="saveLineUI()">✔ حفظ البند وإضافته للمشروع</button>
+                  <button class="btn secondary" onclick="restoreRates()">↺ استعادة نسب المشروع</button>
+                  <button class="btn ghost hidden" id="btnCancelEdit" onclick="cancelEdit()">✖ إلغاء التعديل</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title"><span class="dot"></span>بنود المشروع المختارة</h3>
+            <div class="table-wrap"><table id="linesTable"><thead><tr>
+              <th>م</th><th>الباب</th><th>رقم البند ووصفه</th><th>الوحدة</th><th>الكمية</th>
+              <th>تكلفة الوحدة</th><th>إجمالي التكلفة</th><th>سعر البيع</th><th>إجمالي البيع</th><th>الربح</th><th>الهامش %</th><th>إجراءات</th>
+            </tr></thead><tbody id="linesTbody"></tbody><tfoot id="linesFoot" class="hidden"></tfoot></table></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- دليل البنود -->
+      <section id="view-catalog" class="view hidden">
+        <div class="card">
+          <div class="toolbar">
+            <input id="catSearch" placeholder="🔍 بحث بالرقم أو الوصف" style="max-width:280px" oninput="renderCatalogTable()">
+            <select id="catChapterFilter" style="max-width:220px" onchange="renderCatalogTable()"><option value="">كل الأبواب</option></select>
+            <button class="btn" onclick="openItemModal()">✚ بند جديد</button>
+            <span class="muted" id="catCount" style="font-size:12px"></span>
+          </div>
+          <div class="table-wrap"><table><thead><tr><th>رقم البند</th><th>الباب</th><th>التصنيف الفرعي</th><th>الوصف</th><th>الوحدة</th><th>السعر الاسترشادي</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="catalogTbody"></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- التقارير -->
+      <section id="view-reports" class="view hidden">
+        <div id="repNoProject" class="card empty hidden"><span class="ic">📁</span>اختر مشروعاً من الأعلى لإصدار التقارير</div>
+        <div id="repMain">
+          <div class="card">
+            <h3 class="card-title"><span class="dot"></span>ملخص المشروع <span id="repProjName" class="muted" style="font-weight:600"></span></h3>
+            <div class="chips" id="repChips"></div>
+          </div>
+          <div class="report-cards">
+            <div class="report-card">
+              <span class="ic">📄</span>
+              <h3>مقايسة تقديرية للعميل</h3>
+              <p>نسخة رسمية للطباعة أو الحفظ PDF مع الختم المعتمد أو كمسودة</p>
+              <button class="btn gold" onclick="printQuote()">🖨️ طباعة المقايسة</button>
+            </div>
+            <div class="report-card">
+              <span class="ic">📊</span>
+              <h3>تقرير التكلفة الداخلي</h3>
+              <p>تحليل التكلفة التفصيلية وهوامش الربح لكل بند — للإدارة فقط، لا يُقدم للعميل</p>
+              <button class="btn" onclick="printCostReport()">📈 طباعة التقرير الداخلي</button>
+            </div>
+            <div class="report-card">
+              <span class="ic">📑</span>
+              <h3>جدول الكميات (Google Sheets)</h3>
+              <p>ملف جداول جديد بصيغ حسابية — نسخة داخلية تتضمن التكلفة ونسب الأرباح، لا تُرسل للعميل كما هي</p>
+              <button class="btn green" id="btnBOQ" onclick="exportBOQ()">▤ إصدار جدول الكميات</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- الإعدادات -->
+      <section id="view-settings" class="view hidden">
+        <div class="card">
+          <h3 class="card-title"><span class="dot"></span>بيانات الشركة والختم المعتمد</h3>
+          <p class="muted" style="font-size:12.5px;margin-top:-6px">ارفع صورة الختم الحقيقي إلى Google Drive ثم أدخل معرّف الملف (File ID). لا يُعد إصدار المقايسة اعتماداً رسمياً إلا بعد موافقة المفوض بالتوقيع.</p>
+          <div class="fields">
+            <div class="full"><label>اسم الشركة (يظهر في المطبوعات)</label><input id="sName"></div>
+            <div><label>عنوان الشركة</label><input id="sAddress"></div>
+            <div><label>هاتف الشركة</label><input id="sPhone"></div>
+            <div><label>معرّف صورة الختم في Drive</label><input id="sStamp" placeholder="Google Drive File ID" dir="ltr"></div>
+          </div>
+          <div style="margin-top:14px"><button class="btn" onclick="saveCompanyUI(this)">✓ حفظ بيانات الشركة</button></div>
+        </div>
+        <div class="card">
+          <h3 class="card-title"><span class="dot"></span>النسب الافتراضية للمشاريع الجديدة</h3>
+          <div class="fields">
+            <div><label>المصاريف الإدارية %</label><input id="dOver" type="number" min="0" step="any"></div>
+            <div><label>هامش الربح %</label><input id="dProfit" type="number" min="0" step="any"></div>
+            <div><label>الضريبة %</label><input id="dTax" type="number" min="0" step="any"></div>
+          </div>
+          <div style="margin-top:14px"><button class="btn" onclick="saveDefaultsUI(this)">✓ حفظ النسب الافتراضية</button></div>
+        </div>
+        <div class="card hidden" id="accessCard">
+          <h3 class="card-title"><span class="dot"></span>صلاحيات الدخول للنظام</h3>
+          <p class="muted" style="font-size:12.5px;margin-top:-6px">اكتب بريد Google لكل مستخدم مصرح له (بريد في كل سطر). مالك ملف الجدول مصرح له دائماً. إذا تُركت القائمة فارغة يبقى النظام مفتوحاً لكل من يملك الرابط.</p>
+          <div id="accessState" class="price-warning" style="margin-bottom:12px"></div>
+          <textarea id="sAllowed" rows="4" dir="ltr" style="text-align:left" placeholder="user1@gmail.com&#10;user2@gmail.com"></textarea>
+          <div style="margin-top:14px"><button class="btn" onclick="saveAccessUI(this)">✓ حفظ قائمة المصرح لهم</button></div>
+        </div>
+        <div class="card">
+          <h3 class="card-title"><span class="dot"></span>سجل التعديلات (آخر 100 عملية)</h3>
+          <div class="table-wrap"><table><thead><tr><th>التاريخ</th><th>المستخدم</th><th>العملية</th><th>التفاصيل</th></tr></thead><tbody id="logTbody"></tbody></table></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id="modalRoot"></div>
+<script>
+/* ============================== النواة والحالة ============================== */
+const $=id=>document.getElementById(id);
+const state={projects:[],catalog:[],catalogAll:[],lines:[],projectId:'',settings:{},defaults:{},stats:null,
+             chapter:'',sub:'',editLineId:'',costMode:'bd',view:'dashboard',access:null};
+const STATUS_LIST=['مسودة','قيد التسعير','معتمد','قيد التنفيذ','منفذ','ملغي'];
+const fmt=n=>Number(n||0).toLocaleString('en-US',{minimumFractionDigits:3,maximumFractionDigits:3});
+const fmtPct=n=>Number(n||0).toLocaleString('en-US',{maximumFractionDigits:2});
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{const n=Number(v);return Number.isFinite(n)?n:0};
+/* وسيط آمن داخل onclick: يتحمل علامات التنصيص والشرطة المائلة في أسماء الأبواب */
+const jsArg=s=>esc(JSON.stringify(String(s??'')));
+const r3=n=>Math.round((n+Number.EPSILON)*1000)/1000;
+
+function toast(t,type){
+  const el=document.createElement('div');
+  el.className='toast '+(type||'');
+  el.textContent=t;
+  $('toast').appendChild(el);
+  setTimeout(()=>el.remove(),4500);
+}
+function api(name,...args){
+  return new Promise((resolve,reject)=>{
+    google.script.run
+      .withSuccessHandler(r=>{ if(r===null||r===undefined) reject(new Error('الدالة '+name+' أعادت نتيجة فارغة')); else resolve(r); })
+      .withFailureHandler(e=>reject(new Error(e.message||String(e))))
+      [name](...args);
+  });
+}
+function withBusy(btn,fn){
+  return async(...a)=>{
+    const old=btn.innerHTML; btn.disabled=true; btn.innerHTML='<span class="spin-inline"></span> جارٍ التنفيذ...';
+    try{ await fn(...a); }catch(e){ toast(e.message,'err'); }
+    finally{ btn.disabled=false; btn.innerHTML=old; }
+  };
+}
+
+/* ------------------------------ النوافذ المنبثقة --------------------------- */
+function openModal(title,bodyHTML,buttons){
+  $('modalRoot').innerHTML=
+    '<div class="modal-backdrop" onclick="if(event.target===this)closeModal()">'+
+    '<div class="modal"><div class="modal-head"><h3>'+esc(title)+'</h3><button class="modal-x" onclick="closeModal()">✕</button></div>'+
+    '<div class="modal-body">'+bodyHTML+'</div>'+
+    (buttons?'<div class="modal-foot">'+buttons+'</div>':'')+'</div></div>';
+}
+function closeModal(){ $('modalRoot').innerHTML=''; }
+function confirmDialog(messageHTML,okText,danger,cancelText){
+  return new Promise(res=>{
+    openModal('تأكيد العملية','<p style="font-size:14px;line-height:1.9;margin:0">'+messageHTML+'</p>',
+      '<button class="btn '+(danger?'danger':'')+'" id="cfOk">'+esc(okText||'تأكيد')+'</button>'+
+      '<button class="btn secondary" id="cfNo">'+esc(cancelText||'إلغاء')+'</button>');
+    $('cfOk').onclick=()=>{closeModal();res(true)};
+    $('cfNo').onclick=()=>{closeModal();res(false)};
+  });
+}
+
+/* ------------------------------ التنقل بين الشاشات ------------------------- */
+const VIEW_TITLES={dashboard:'لوحة التحكم',projects:'إدارة المشروعات',pricing:'التسعير والمقايسة',catalog:'دليل البنود',reports:'التقارير والطباعة',settings:'الإعدادات'};
+function switchView(v){
+  state.view=v;
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===v));
+  document.querySelectorAll('.view').forEach(s=>s.classList.add('hidden'));
+  $('view-'+v).classList.remove('hidden');
+  $('viewTitle').textContent=VIEW_TITLES[v];
+  if(v==='dashboard')renderDashboard();
+  if(v==='projects')renderProjectsTable();
+  if(v==='pricing')renderPricing();
+  if(v==='catalog')renderCatalogView();
+  if(v==='reports')renderReports();
+  if(v==='settings')renderSettings();
+}
+document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>switchView(b.dataset.view)));
+
+/* --------------------------------- التحميل --------------------------------- */
+function setCatalog(all){ state.catalogAll=all||[]; state.catalog=state.catalogAll.filter(x=>x.active); }
+async function reloadCatalog(){ setCatalog(await api('catalogAll')); }
+/* تحديث بنود المشروع الحالي والإحصاءات معاً (استدعاءان متوازيان) */
+async function reloadLines(){
+  const pid=state.projectId;
+  const [ls,st]=await Promise.all([pid?api('lines',pid):Promise.resolve([]), api('projectsOverview').catch(()=>null)]);
+  if(pid===state.projectId) state.lines=ls;
+  if(st) state.stats=st;
+}
+async function reloadProjects(){
+  const [ps,st]=await Promise.all([api('projects'), api('projectsOverview').catch(()=>null)]);
+  state.projects=ps; if(st) state.stats=st;
+}
+async function boot(){
+  try{
+    let b=null;
+    try{ b=await api('bootstrap'); }catch(e){ if(/غير مصرح/.test(e.message)) throw e; }
+    if(b){
+      state.projects=b.projects; setCatalog(b.catalogAll);
+      state.settings=b.settings||{}; state.defaults=b.defaults||{overhead:0,profit:0,tax:0};
+      state.stats=b.stats||null; state.access=b.access||null;
+    }else{
+      /* توافق مع نسخة خادم أقدم لا تحتوي bootstrap */
+      state.projects=await api('projects');
+      await reloadCatalog();
+      try{ state.settings=await api('companySettings'); }catch(e){}
+      try{ state.defaults=await api('defaultRates'); }catch(e){ state.defaults={overhead:0,profit:0,tax:0}; }
+      try{ state.stats=await api('projectsOverview'); }catch(e){ state.stats=null; }
+    }
+    renderGlobalProjects();
+    fillStatusFilters();
+    switchView('dashboard');
+  }catch(e){
+    toast('خطأ في تحميل البيانات: '+e.message,'err');
+  }finally{
+    $('splash').classList.add('hidden');
+    $('app').classList.remove('hidden');
+  }
+}
+async function refreshAll(){
+  try{
+    await Promise.all([reloadProjects(), reloadCatalog()]);
+    renderGlobalProjects();
+    if(state.projectId) state.lines=await api('lines',state.projectId);
+    switchView(state.view);
+    toast('تم تحديث البيانات','ok');
+  }catch(e){ toast(e.message,'err'); }
+}
+function renderGlobalProjects(){
+  const old=state.projectId;
+  $('globalProject').innerHTML='<option value="">— لم يُختر مشروع —</option>'+
+    state.projects.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join('');
+  if(state.projects.some(p=>p.id===old)) { $('globalProject').value=old; }
+  else { state.projectId=''; state.lines=[]; }
+}
+async function onGlobalProject(){
+  if(state.editLineId) cancelEdit();
+  state.projectId=$('globalProject').value;
+  state.editLineId='';
+  if(state.projectId){
+    try{ state.lines=await api('lines',state.projectId); }catch(e){ toast(e.message,'err'); state.lines=[]; }
+  }else state.lines=[];
+  if(state.view==='pricing')renderPricing();
+  if(state.view==='reports')renderReports();
+}
+function fillStatusFilters(){
+  $('projStatusFilter').innerHTML='<option value="">كل الحالات</option>'+STATUS_LIST.map(s=>'<option>'+s+'</option>').join('');
+}
+function curProject(){ return state.projects.find(p=>p.id===state.projectId)||null; }
+
+/* ------------------------------- لوحة التحكم ------------------------------- */
+let ch1=null,ch2=null;
+function renderDashboard(){
+  const st=state.stats;
+  const kpis=[
+    ['إجمالي المشاريع', st?st.projectsCount:state.projects.length, 'مشروع مسجل'],
+    ['بنود دليل الأسعار', st?st.catalogCount:state.catalog.length, 'بند في الدليل'],
+    ['قيمة العروض الإجمالية', st?fmt(st.totals.final):'—', 'د.ك بعد الضريبة'],
+    ['تكلفة التنفيذ الإجمالية', st?fmt(st.totals.cost):'—', 'د.ك'],
+    ['هامش الربح الإجمالي', st&&kpiNet(st)>0?fmtPct((kpiNet(st)-st.totals.cost)/kpiNet(st)*100)+'%':'—', 'من البيع قبل الضريبة']
+  ];
+  $('kpiRow').innerHTML=kpis.map(k=>'<div class="kpi"><div class="k-label">'+k[0]+'</div><div class="k-value">'+k[1]+'</div><div class="k-sub">'+k[2]+'</div></div>').join('');
+
+  const rec=st?st.recent:[];
+  $('recentTbody').innerHTML=rec.length?rec.map(p=>
+    '<tr><td><b>'+esc(p.name)+'</b></td><td>'+esc(p.client)+'</td>'+
+    '<td><span class="badge '+esc(String(p.status).replace(/ /g,'-'))+'">'+esc(p.status)+'</span></td>'+
+    '<td class="num">'+p.count+'</td><td class="num">'+fmt(p.final)+'</td>'+
+    '<td><button class="btn sm secondary" onclick="openPricingFor('+jsArg(p.id)+')">فتح التسعير</button></td></tr>').join('')
+    :'<tr><td colspan="6" class="empty">لا توجد مشاريع بعد — أنشئ مشروعك الأول من شاشة المشروعات</td></tr>';
+
+  if(typeof Chart==='undefined'||!st) return;
+  try{
+    const top=chaptersTop(ch1Entries(st));
+    if(ch1){ch1.destroy()}
+    ch1=new Chart($('chartChapters'),{type:'doughnut',
+      data:{labels:top.map(x=>x[0]),datasets:[{data:top.map(x=>x[1]),
+        backgroundColor:['#173b70','#b48a40','#1f6f8b','#6b8f71','#8c5b7b','#c98a3d','#4a6fa5','#96613d','#7a7a52']}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'left',rtl:true,labels:{font:{family:'Cairo',size:11},boxWidth:12}}}}});
+    if(ch2){ch2.destroy()}
+    ch2=new Chart($('chartTop'),{type:'bar',
+      data:{labels:(st.topProjects||[]).map(p=>p.name.length>22?p.name.slice(0,22)+'…':p.name),
+        datasets:[{label:'القيمة الإجمالية (د.ك)',data:(st.topProjects||[]).map(p=>p.final),backgroundColor:'#173b70',borderRadius:6}]},
+      options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+        plugins:{legend:{display:false}},scales:{x:{ticks:{font:{family:'Cairo'}}},y:{ticks:{font:{family:'Cairo',size:11}}}}}});
+  }catch(e){ console.warn('charts',e); }
+}
+function kpiNet(st){ return st.totals.net!==undefined?st.totals.net:st.totals.final; }
+function ch1Entries(st){ return Object.entries(st.chapters||{}).sort((a,b)=>b[1]-a[1]); }
+function chaptersTop(entries){
+  const t=entries.slice(0,8);
+  const rest=entries.slice(8).reduce((a,x)=>a+x[1],0);
+  if(rest>0)t.push(['أخرى',rest]);
+  return t;
+}
+
+/* -------------------------------- المشروعات -------------------------------- */
+function projectStatsOf(id){
+  return (state.stats&&state.stats.perProject.find(x=>x.id===id))||{count:0,sales:0,cost:0,final:0};
+}
+function renderProjectsTable(){
+  const q=($('projSearch').value||'').toLowerCase(), sf=$('projStatusFilter').value;
+  const arr=state.projects.filter(p=>(p.name+' '+p.client).toLowerCase().includes(q)&&(!sf||p.status===sf));
+  $('projectsTbody').innerHTML=arr.length?arr.map((p,i)=>{
+    const s=projectStatsOf(p.id);
+    return '<tr><td>'+(i+1)+'</td><td><b>'+esc(p.name)+'</b>'+(p.notes?'<div class="muted" style="font-size:11px">'+esc(p.notes)+'</div>':'')+'</td>'+
+      '<td>'+esc(p.client)+'</td>'+
+      '<td><span class="badge '+esc(String(p.status).replace(/ /g,'-'))+'">'+esc(p.status)+'</span></td>'+
+      '<td class="num" style="font-size:12px">'+fmtPct(p.overhead)+' / '+fmtPct(p.profit)+' / '+fmtPct(p.tax)+'</td>'+
+      '<td class="num">'+s.count+'</td><td class="num">'+fmt(s.sales)+'</td><td class="num">'+fmt(s.cost)+'</td>'+
+      '<td style="white-space:nowrap">'+
+      '<button class="btn sm" onclick="openPricingFor('+jsArg(p.id)+')">تسعير</button> '+
+      '<button class="btn sm secondary" onclick="openProjectModal('+jsArg(p.id)+')">تعديل</button> '+
+      '<button class="btn sm secondary" onclick="dupProject('+jsArg(p.id)+',this)">نسخ</button> '+
+      '<button class="btn sm danger" onclick="delProject('+jsArg(p.id)+')">حذف</button></td></tr>';
+  }).join(''):'<tr><td colspan="9" class="empty">لا توجد مشاريع مطابقة</td></tr>';
+}
+function openProjectModal(id){
+  const p=id?state.projects.find(x=>x.id===id):null;
+  const d=state.defaults||{overhead:0,profit:0,tax:0};
+  openModal(p?'تعديل بيانات المشروع':'مشروع جديد',
+    '<div class="fields">'+
+    '<div class="full"><label>اسم المشروع *</label><input id="mPName" value="'+esc(p?p.name:'')+'"></div>'+
+    '<div class="full"><label>العميل</label><input id="mPClient" value="'+esc(p?p.client:'')+'"></div>'+
+    '<div><label>المصاريف الإدارية %</label><input id="mPOver" type="number" min="0" step="any" value="'+(p?p.overhead:d.overhead)+'"></div>'+
+    '<div><label>هامش الربح %</label><input id="mPProfit" type="number" min="0" step="any" value="'+(p?p.profit:d.profit)+'"></div>'+
+    '<div><label>الضريبة %</label><input id="mPTax" type="number" min="0" step="any" value="'+(p?p.tax:d.tax)+'"></div>'+
+    '<div><label>الحالة</label><select id="mPStatus">'+STATUS_LIST.map(s=>'<option '+(p&&p.status===s?'selected':'')+'>'+s+'</option>').join('')+'</select></div>'+
+    '<div class="full"><label>ملاحظات</label><textarea id="mPNotes" rows="2">'+esc(p?p.notes:'')+'</textarea></div>'+
+    '</div>',
+    '<button class="btn" id="mPSave">'+(p?'حفظ التعديلات':'إنشاء المشروع')+'</button><button class="btn secondary" onclick="closeModal()">إلغاء</button>');
+  $('mPSave').onclick=withBusy($('mPSave'),async()=>{
+    if(!$('mPName').value.trim()){toast('أدخل اسم المشروع','err');return}
+    const payloadP={name:$('mPName').value,client:$('mPClient').value,
+      overhead:$('mPOver').value,profit:$('mPProfit').value,tax:$('mPTax').value,status:$('mPStatus').value,notes:$('mPNotes').value};
+    if(p) payloadP.id=p.id;
+    const newId=await api('saveProject',payloadP);
+    await reloadProjects();
+    if(!p){ if(state.editLineId) cancelEdit(); state.projectId=newId; state.lines=[]; }
+    renderGlobalProjects();
+    closeModal();
+    toast(p?'تم حفظ التعديلات':'تم إنشاء المشروع','ok');
+    if(!p) switchView('pricing');
+    else renderProjectsTable();
+  });
+}
+async function delProject(id){
+  const p=state.projects.find(x=>x.id===id);
+  if(!(await confirmDialog('سيتم حذف المشروع «'+esc(p?p.name:'')+'» وجميع بنوده نهائياً. هل أنت متأكد؟','حذف نهائي',true)))return;
+  try{
+    await api('deleteProject',id);
+    if(state.projectId===id){state.projectId='';state.lines=[]}
+    await reloadProjects();
+    renderGlobalProjects(); renderProjectsTable();
+    toast('تم حذف المشروع','ok');
+  }catch(e){ toast(e.message,'err'); }
+}
+function dupProject(id,btn){
+  withBusy(btn,async()=>{
+    const newId=await api('duplicateProject',id);
+    await reloadProjects();
+    renderGlobalProjects(); renderProjectsTable();
+    toast('تم إنشاء نسخة من المشروع','ok');
+  })();
+}
+function openPricingFor(id){
+  if(state.editLineId) cancelEdit();
+  state.projectId=id; $('globalProject').value=id;
+  api('lines',id).then(ls=>{state.lines=ls; switchView('pricing');}).catch(e=>{toast(e.message,'err'); switchView('pricing');});
+}
+
+/* ------------------------------ التسعير والمقايسة --------------------------- */
+function renderPricing(){
+  const has=!!state.projectId;
+  $('pricingNoProject').classList.toggle('hidden',has);
+  $('pricingMain').classList.toggle('hidden',!has);
+  if(!has) return;
+  const p=curProject();
+  $('pricingProjName').textContent='— '+(p?p.name:'');
+  renderPrjChips();
+  if(!state.chapter) renderChapters();
+  renderLinesTable();
+  if(!state.editLineId) restoreRates();
+}
+function summaryOf(){
+  const ls=state.lines, p=curProject();
+  const sales=ls.reduce((a,x)=>a+x.total,0), cost=ls.reduce((a,x)=>a+x.costTotal,0);
+  const legacy=ls.filter(x=>x.pricingMode==='legacy').reduce((a,x)=>a+x.total,0);
+  const oldOver=legacy*(p?p.overhead:0)/100, oldProfit=(legacy+oldOver)*(p?p.profit:0)/100;
+  const tax=(sales+oldOver+oldProfit)*(p?p.tax:0)/100;
+  return {count:ls.length, sales, cost, oldOver, oldProfit, tax, final:sales+oldOver+oldProfit+tax,
+          diff:sales+oldOver+oldProfit-cost};
+}
+function renderPrjChips(){
+  const s=summaryOf();
+  $('prjChips').innerHTML=[
+    ['عدد البنود', String(s.count)],
+    ['قيمة البيع (شامل النسب)', fmt(s.sales)+' د.ك'],
+    ['تكلفة التنفيذ', fmt(s.cost)+' د.ك'],
+    ['الفرق قبل الضريبة', fmt(s.diff)+' د.ك'],
+    ['الضريبة', fmt(s.tax)+' د.ك']
+  ].map(c=>'<div class="chip"><span class="c-label">'+c[0]+'</span><span class="c-value">'+c[1]+'</span></div>').join('')+
+  '<div class="chip hero"><span class="c-label">الإجمالي النهائي</span><span class="c-value">'+fmt(s.final)+' د.ك</span></div>';
+}
+function iconFor(t){
+  const x=String(t).toLowerCase();
+  const icons=[[/كهرب|إنار|إضاء|كابل/,'⚡'],[/سباك|صرف|مياه|صحي|تغذية/,'🚰'],[/خرسان|أساس|تسليح/,'🏗️'],[/أرض|بلاط|رخام|سيراميك/,'▦'],[/دهان|صبغ|طلاء/,'🎨'],[/باب|نافذ|المنيوم|ألومنيوم/,'🚪'],[/تكييف|تهوي|تبريد/,'❄️'],[/هدم|إزالة|حفر|ردم/,'⛏️'],[/عزل/,'🛡️'],[/حريق/,'🧯'],[/زراع|حدائق|ري/,'🌿'],[/سقف|جبس/,'⌂']];
+  return (icons.find(i=>i[0].test(x))||[0,'🏢'])[1];
+}
+function chapterList(){ return [...new Set(state.catalog.map(x=>x.chapter))]; }
+function subList(ch){ return [...new Set(state.catalog.filter(x=>x.chapter===ch).map(x=>x.sub))]; }
+function renderChapters(){
+  state.chapter=''; state.sub='';
+  $('chaptersGrid').innerHTML=chapterList().map(c=>
+    '<button class="tile" onclick="openChapter('+jsArg(c)+')"><span class="ic">'+iconFor(c)+'</span>'+esc(c)+'<small>'+state.catalog.filter(x=>x.chapter===c).length+' بند</small></button>').join('');
+  $('chaptersGrid').classList.remove('hidden');
+  $('subsGrid').classList.add('hidden');
+  $('itemArea').classList.add('hidden');
+  $('crumb').textContent='الأبواب الرئيسية — '+chapterList().length+' باب';
+}
+function openChapter(c){
+  state.chapter=c; state.sub='';
+  $('chaptersGrid').classList.add('hidden');
+  $('subsGrid').classList.remove('hidden');
+  $('itemArea').classList.add('hidden');
+  $('subsGrid').innerHTML='<button class="tile back" onclick="renderChapters()">↩ العودة للأبواب</button>'+
+    subList(c).map(s=>'<button class="tile" onclick="openSub('+jsArg(s)+')"><span class="ic">'+iconFor(s)+'</span>'+esc(s)+'<small>'+state.catalog.filter(x=>x.chapter===c&&x.sub===s).length+' بند</small></button>').join('');
+  $('crumb').textContent=c+' ← اختر التصنيف الفرعي';
+}
+function openSub(s){
+  state.sub=s;
+  $('subsGrid').classList.add('hidden');
+  $('itemArea').classList.remove('hidden');
+  $('itemSearch').value='';
+  $('crumb').textContent=state.chapter+' ← '+s;
+  renderItems();
+}
+function backSubs(){ if(state.chapter) openChapter(state.chapter); }
+function closePicker(){ $('pickerMenu').classList.add('hidden'); $('pickerTrigger').setAttribute('aria-expanded','false'); }
+function togglePicker(){
+  const m=$('pickerMenu'), opening=m.classList.contains('hidden');
+  m.classList.toggle('hidden',!opening);
+  $('pickerTrigger').setAttribute('aria-expanded',String(opening));
+}
+document.addEventListener('click',e=>{ if(!e.target.closest('#itemPicker')) closePicker(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closePicker(); closeModal(); } });
+function renderItems(){
+  const q=($('itemSearch').value||'').toLowerCase();
+  const arr=state.catalog.filter(x=>x.chapter===state.chapter&&x.sub===state.sub&&
+    (x.code+' '+x.description+' '+x.detail).toLowerCase().includes(q));
+  const menu=$('pickerMenu'); menu.replaceChildren();
+  if(!arr.length){
+    const d=document.createElement('div'); d.style.cssText='padding:12px;color:#63758c;font-size:13px';
+    d.textContent='لا توجد بنود مطابقة'; menu.appendChild(d);
+  }
+  arr.forEach(x=>{
+    const b=document.createElement('button');
+    b.type='button'; b.className='picker-opt'; b.dataset.itemId=x.id; b.setAttribute('role','option');
+    b.textContent=x.code+' — '+x.description+(x.detail?' / '+x.detail:'');
+    b.addEventListener('click',()=>{ pickItem(x.id); });
+    menu.appendChild(b);
+  });
+  $('pickerLabel').textContent='اختر البند...';
+  $('itemDesc').textContent='';
+  $('itemPicker').dataset.selected='';
+  state.editLineId='';
+  $('btnSaveLine').innerHTML='✔ حفظ البند وإضافته للمشروع';
+  $('btnCancelEdit').classList.add('hidden');
+  closePicker();
+  clearItemForm();
+}
+function pickItem(id){
+  const x=state.catalog.find(v=>v.id===id)||state.catalogAll.find(v=>v.id===id);
+  $('pickerMenu').querySelectorAll('[data-item-id]').forEach(el=>el.setAttribute('aria-selected',String(el.dataset.itemId===id)));
+  $('pickerLabel').textContent=x?x.code+' — '+x.description+(x.detail?' / '+x.detail:''):'اختر البند...';
+  closePicker();
+  $('itemPicker').dataset.selected=id||'';
+  if(!state.editLineId) clearItemForm(true);
+  if(x){
+    $('pUnit').value=x.unit; $('pRef').value=fmt(x.price);
+    $('itemDesc').textContent=x.description+' '+x.detail;
+  }
+  updateCalc();
+}
+function selectedItemId(){ return $('itemPicker').dataset.selected||''; }
+function clearItemForm(keepQty){
+  if(!keepQty) $('pQty').value=1;
+  ['cMat','cLab','cEq','cSub','cManual','pNote'].forEach(i=>$(i).value='');
+  $('cWaste').value=0; $('rDisc').value=0;
+  $('pUnitCost').value=''; $('oPrice').value=''; $('oTotal').value=''; $('oMarginU').value=''; $('oMarginPct').value='';
+  $('compareBox').className=''; $('compareBox').textContent='';
+}
+function setCostMode(m){
+  state.costMode=m;
+  $('modeBD').classList.toggle('active',m==='bd');
+  $('modeManual').classList.toggle('active',m==='manual');
+  $('bdInputs').classList.toggle('hidden',m!=='bd');
+  $('manualInput').classList.toggle('hidden',m==='bd');
+  updateCalc();
+}
+function computeUnitCost(){
+  if(state.costMode==='bd'){
+    const parts=['cMat','cLab','cEq','cSub'].map(i=>$(i).value.trim());
+    if(parts.every(v=>v==='')) return null;
+    const sum=parts.reduce((a,v)=>a+(v===''?0:num(v)),0);
+    return r3(sum*(1+num($('cWaste').value)/100));
+  }
+  const m=$('cManual').value.trim();
+  return m===''?null:num(m);
+}
+function updateCalc(){
+  const uc=computeUnitCost(), qty=num($('pQty').value);
+  const oh=num($('rOver').value), pf=num($('rProfit').value), disc=num($('rDisc').value);
+  const valid=uc!==null&&uc>=0;
+  $('pUnitCost').value=valid?fmt(uc):'';
+  const price=valid?r3(uc*(1+(oh+pf)/100)*(1-disc/100)):null;
+  $('oPrice').value=price===null?'':fmt(price);
+  $('oTotal').value=price===null?'':fmt(r3(qty*price));
+  $('oMarginU').value=price===null?'':fmt(price-uc);
+  $('oMarginPct').value=price===null||price<=0?'':fmtPct((price-uc)/price*100)+'%';
+  const sel=selectedItemId(), item=state.catalog.find(x=>x.id===sel)||state.catalogAll.find(x=>x.id===sel), box=$('compareBox');
+  if(!item||price===null){ box.className=''; box.textContent=''; return; }
+  const diff=price-item.price, pct=item.price>0?Math.abs(diff)/item.price*100:null;
+  const pctTxt=pct===null?'':' بنسبة '+fmtPct(pct)+'%';
+  if(diff>0){ box.className='price-warning'; box.textContent='⚠️ تنبيه: سعر البيع أعلى من السعر الاسترشادي بمقدار '+fmt(diff)+' د.ك'+pctTxt; }
+  else if(diff<0){ box.className='price-good'; box.textContent='✓ سعر البيع أقل من السعر الاسترشادي بمقدار '+fmt(-diff)+' د.ك'+pctTxt; }
+  else { box.className='price-good'; box.textContent='✓ سعر البيع يساوي السعر الاسترشادي'; }
+}
+function restoreRates(){
+  const p=curProject();
+  $('rOver').value=p?p.overhead:0;
+  $('rProfit').value=p?p.profit:0;
+  updateCalc();
+}
+function cancelEdit(){
+  state.editLineId='';
+  $('btnSaveLine').innerHTML='✔ حفظ البند وإضافته للمشروع';
+  $('btnCancelEdit').classList.add('hidden');
+  clearItemForm();
+  $('pickerLabel').textContent='اختر البند...';
+  $('itemPicker').dataset.selected='';
+  restoreRates();
+}
+function saveLineUI(){
+  withBusy($('btnSaveLine'),async()=>{
+    if(!state.projectId) throw Error('اختر أو أنشئ مشروعاً أولاً');
+    const itemId=selectedItemId();
+    if(!itemId) throw Error('اختر البند من القائمة');
+    const uc=computeUnitCost();
+    if(uc===null||uc<0) throw Error('أدخل تكلفة الوحدة (تفصيلية أو يدوية)');
+    if(num($('pQty').value)<=0) throw Error('أدخل كمية أكبر من صفر');
+    const payload={projectId:state.projectId, itemId:itemId, qty:$('pQty').value,
+      overhead:$('rOver').value, profit:$('rProfit').value, discount:$('rDisc').value, note:$('pNote').value};
+    if(state.editLineId) payload.lineId=state.editLineId;
+    if(state.costMode==='bd'&&['cMat','cLab','cEq','cSub'].some(i=>$(i).value.trim()!=='')){
+      payload.materials=$('cMat').value; payload.labor=$('cLab').value;
+      payload.equipment=$('cEq').value; payload.subcontractor=$('cSub').value; payload.waste=$('cWaste').value;
+    }else{
+      payload.manual=true; payload.cost=uc;
+    }
+    await api('saveLine',payload);
+    await reloadLines();
+    const wasEdit=!!state.editLineId;
+    cancelEdit();
+    renderPrjChips(); renderLinesTable();
+    toast(wasEdit?'تم تحديث البند':'تم حفظ البند وإضافته للمشروع','ok');
+  })();
+}
+function renderLinesTable(){
+  const ls=state.lines;
+  $('linesTbody').innerHTML=ls.length?ls.map((x,i)=>{
+    const profit=x.total-x.costTotal, margin=x.total>0?(profit/x.total*100):0;
+    return '<tr><td>'+(i+1)+'</td><td>'+esc(x.chapter)+'</td>'+
+      '<td><b>'+esc(x.code)+'</b> — '+esc(x.description)+
+      (x.pricingMode==='legacy'?' <small class="muted">(تسعير قديم)</small>':'')+
+      (x.note?'<div class="muted" style="font-size:11px">📌 '+esc(x.note)+'</div>':'')+'</td>'+
+      '<td>'+esc(x.unit)+'</td><td class="num">'+fmt(x.qty)+'</td>'+
+      '<td class="num">'+fmt(x.cost)+'</td><td class="num">'+fmt(x.costTotal)+'</td>'+
+      '<td class="num">'+fmt(x.price)+'</td><td class="num">'+fmt(x.total)+'</td>'+
+      '<td class="num" style="color:'+(profit>=0?'var(--green)':'var(--red)')+'">'+fmt(profit)+'</td>'+
+      '<td class="num">'+fmtPct(margin)+'%</td>'+
+      '<td style="white-space:nowrap"><button class="btn sm secondary" onclick="editLine('+jsArg(x.id)+')">تعديل</button> '+
+      '<button class="btn sm secondary" onclick="dupLine('+jsArg(x.id)+',this)">نسخ</button> '+
+      '<button class="btn sm danger" onclick="delLine('+jsArg(x.id)+')">حذف</button></td></tr>';
+  }).join(''):'<tr><td colspan="12" class="empty">لم تُضف بنود بعد — اختر بنداً من الدليل أعلاه وسعّره</td></tr>';
+  const s=summaryOf();
+  $('linesFoot').classList.toggle('hidden',!ls.length);
+  if(ls.length){
+    $('linesFoot').innerHTML='<tr><td colspan="6">الإجماليات</td><td class="num">'+fmt(s.cost)+'</td><td></td>'+
+      '<td class="num">'+fmt(s.sales)+'</td><td class="num" style="color:var(--green)">'+fmt(s.diff)+'</td><td colspan="2"></td></tr>';
+  }
+  renderPrjChips();
+}
+function editLine(id){
+  const x=state.lines.find(r=>r.id===id); if(!x) return;
+  const item=state.catalogAll.find(r=>r.id===x.itemId)||state.catalog.find(r=>r.id===x.itemId);
+  if(!item){ toast('البند غير موجود في الدليل','err'); return; }
+  if(state.chapter!==item.chapter||state.sub!==item.sub){
+    state.chapter=item.chapter; state.sub=item.sub;
+    $('chaptersGrid').classList.add('hidden'); $('subsGrid').classList.add('hidden');
+    $('itemArea').classList.remove('hidden');
+    $('crumb').textContent=item.chapter+' ← '+item.sub;
+    renderItems();
+  }
+  state.editLineId='';
+  pickItem(item.id);
+  state.editLineId=id;
+  $('pQty').value=x.qty; $('pNote').value=x.note||'';
+  if(x.pricingMode==='v3'){
+    if(x.materials||x.labor||x.equipment||x.subcontractor){
+      setCostMode('bd');
+      $('cMat').value=x.materials||''; $('cLab').value=x.labor||'';
+      $('cEq').value=x.equipment||''; $('cSub').value=x.subcontractor||'';
+      $('cWaste').value=x.waste||0;
+    }else{
+      setCostMode('manual'); $('cManual').value=x.cost;
+    }
+    $('rOver').value=x.overhead; $('rProfit').value=x.profit; $('rDisc').value=x.discount||0;
+  }else{
+    setCostMode('manual'); $('cManual').value=x.cost;
+    $('rOver').value=x.overhead||0; $('rProfit').value=x.profit||0; $('rDisc').value=0;
+    if(x.pricingMode==='legacy') toast('بند قديم: راجع نسب المصاريف والأرباح قبل الحفظ بالنظام الجديد');
+  }
+  $('btnSaveLine').innerHTML='✔ حفظ تعديل البند';
+  $('btnCancelEdit').classList.remove('hidden');
+  updateCalc();
+  $('pricingPanel').scrollIntoView({behavior:'smooth'});
+}
+function dupLine(id,btn){
+  withBusy(btn,async()=>{
+    await api('duplicateLine',state.projectId,id);
+    await reloadLines();
+    renderLinesTable();
+    toast('تم نسخ البند','ok');
+  })();
+}
+async function delLine(id){
+  if(!(await confirmDialog('حذف هذا البند من المشروع؟','حذف',true))) return;
+  try{
+    await api('removeLine',state.projectId,id);
+    await reloadLines();
+    renderLinesTable();
+    toast('تم حذف البند','ok');
+  }catch(e){ toast(e.message,'err'); }
+}
+
+/* -------------------------------- دليل البنود ------------------------------- */
+function renderCatalogView(){
+  const chs=[...new Set(state.catalogAll.map(x=>x.chapter))];
+  $('catChapterFilter').innerHTML='<option value="">كل الأبواب</option>'+chs.map(c=>'<option>'+esc(c)+'</option>').join('');
+  renderCatalogTable();
+}
+function renderCatalogTable(){
+  const q=($('catSearch').value||'').toLowerCase(), ch=$('catChapterFilter').value;
+  const arr=state.catalogAll.filter(x=>(x.code+' '+x.description+' '+x.detail).toLowerCase().includes(q)&&(!ch||x.chapter===ch));
+  const CAP=150;
+  $('catCount').textContent='النتائج: '+arr.length+(arr.length>CAP?' — يُعرض أول '+CAP+' (ضيّق البحث)':'');
+  $('catalogTbody').innerHTML=arr.slice(0,CAP).map(x=>
+    '<tr style="'+(x.active?'':'opacity:.5')+'"><td><b>'+esc(x.code)+'</b></td><td>'+esc(x.chapter)+'</td><td>'+esc(x.sub)+'</td>'+
+    '<td>'+esc(x.description)+(x.detail?'<div class="muted" style="font-size:11px">'+esc(x.detail)+'</div>':'')+'</td>'+
+    '<td>'+esc(x.unit)+'</td><td class="num">'+fmt(x.price)+'</td>'+
+    '<td><span class="badge '+(x.active?'معتمد':'ملغي')+'">'+(x.active?'نشط':'موقوف')+'</span></td>'+
+    '<td style="white-space:nowrap"><button class="btn sm secondary" onclick="openItemModal('+jsArg(x.id)+')">تعديل</button> '+
+    '<button class="btn sm '+(x.active?'danger':'green')+'" onclick="toggleItemActive('+jsArg(x.id)+','+!x.active+')">'+(x.active?'إيقاف':'تفعيل')+'</button></td></tr>'
+  ).join('')||'<tr><td colspan="8" class="empty">لا توجد بنود مطابقة</td></tr>';
+}
+function openItemModal(id){
+  const x=id?state.catalogAll.find(v=>v.id===id):null;
+  openModal(x?'تعديل بند في الدليل':'إضافة بند جديد للدليل',
+    '<div class="fields">'+
+    '<div><label>رقم البند *</label><input id="mICode" value="'+esc(x?x.code:'')+'"></div>'+
+    '<div><label>الباب الرئيسي *</label><input id="mIChapter" list="chList" value="'+esc(x?x.chapter:'')+'"><datalist id="chList">'+[...new Set(state.catalogAll.map(v=>v.chapter))].map(c=>'<option value="'+esc(c)+'">').join('')+'</datalist></div>'+
+    '<div><label>التصنيف الفرعي</label><input id="mISub" value="'+esc(x?x.sub:'')+'"></div>'+
+    '<div><label>الوحدة</label><input id="mIUnit" value="'+esc(x?x.unit:'')+'" placeholder="م2 / م.ط / عدد"></div>'+
+    '<div><label>السعر الاسترشادي (د.ك)</label><input id="mIPrice" type="number" min="0" step="any" value="'+(x?x.price:'')+'"></div>'+
+    '<div class="full"><label>وصف البند *</label><textarea id="mIDesc" rows="2">'+esc(x?x.description:'')+'</textarea></div>'+
+    '<div class="full"><label>الوصف الفرعي / التفاصيل</label><textarea id="mIDetail" rows="2">'+esc(x?x.detail:'')+'</textarea></div>'+
+    '</div>',
+    '<button class="btn" id="mISave">حفظ البند</button><button class="btn secondary" onclick="closeModal()">إلغاء</button>');
+  $('mISave').onclick=withBusy($('mISave'),async()=>{
+    if(!$('mICode').value.trim()||!$('mIDesc').value.trim()||!$('mIChapter').value.trim()){ toast('أدخل رقم البند والباب والوصف','err'); return; }
+    const payloadI={code:$('mICode').value,chapter:$('mIChapter').value,
+      sub:$('mISub').value,unit:$('mIUnit').value,price:$('mIPrice').value||0,
+      description:$('mIDesc').value,detail:$('mIDetail').value};
+    if(x) payloadI.id=x.id;
+    await api('saveCatalogItem',payloadI);
+    await reloadCatalog();
+    closeModal(); renderCatalogView();
+    toast(x?'تم تحديث البند':'تمت إضافة البند للدليل','ok');
+  });
+}
+async function toggleItemActive(id,active){
+  try{
+    await api('setCatalogActive',id,active);
+    await reloadCatalog();
+    renderCatalogTable();
+    toast(active?'تم تفعيل البند':'تم إيقاف البند (لن يظهر في التسعير)','ok');
+  }catch(e){ toast(e.message,'err'); }
+}
+
+/* ------------------------------ التقارير والطباعة --------------------------- */
+function renderReports(){
+  const has=!!state.projectId;
+  $('repNoProject').classList.toggle('hidden',has);
+  $('repMain').classList.toggle('hidden',!has);
+  if(!has) return;
+  const p=curProject(), s=summaryOf();
+  $('repProjName').textContent='— '+(p?p.name:'')+' ('+(p?p.client:'')+')';
+  $('repChips').innerHTML=[
+    ['عدد البنود',String(s.count)],['قيمة البيع',fmt(s.sales)+' د.ك'],['تكلفة التنفيذ',fmt(s.cost)+' د.ك'],
+    ['الفرق قبل الضريبة',fmt(s.diff)+' د.ك'],['الضريبة',fmt(s.tax)+' د.ك']
+  ].map(c=>'<div class="chip"><span class="c-label">'+c[0]+'</span><span class="c-value">'+c[1]+'</span></div>').join('')+
+  '<div class="chip hero"><span class="c-label">الإجمالي النهائي</span><span class="c-value">'+fmt(s.final)+' د.ك</span></div>';
+}
+const PRINT_CSS='@page{size:A4;margin:14mm}*{box-sizing:border-box}body{font-family:Cairo,Tahoma,Arial;color:#1d2c3c;font-size:11px;margin:0}'+
+'.head{border-bottom:3px solid #ba944e;padding-bottom:12px;display:flex;justify-content:space-between;align-items:center}'+
+'.brand{font-size:18px;font-weight:800;color:#173b70}.sub{color:#6b7481;margin-top:5px;font-size:10px}'+
+'.badge{padding:6px 12px;border:1px solid #bd9b5a;color:#745520;border-radius:5px;font-size:11px}'+
+'h1{text-align:center;color:#173b70;font-size:19px;margin:20px 0}'+
+'.meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:#f3f6fa;padding:12px;margin-bottom:18px;font-size:11px}'+
+'table{width:100%;border-collapse:collapse}th{background:#173b70;color:white}th,td{border:1px solid #c9d3de;padding:7px;text-align:right;vertical-align:top;font-size:10.5px}'+
+'tbody tr:nth-child(even){background:#f5f7fa}.chrow td{background:#e8eff8;font-weight:800;color:#173b70}'+
+'.sum{width:55%;margin:20px 0 0 auto}.sum td:first-child{font-weight:bold}.sum tr:last-child{background:#e9f0fa;font-weight:800;font-size:12px}'+
+'.foot{display:flex;justify-content:space-between;gap:30px;margin-top:40px;page-break-inside:avoid}'+
+'.seal{border:1px dashed #b7c2d0;width:215px;height:125px;display:flex;align-items:center;justify-content:center;color:#87909b}'+
+'.sign{width:215px;border-top:1px solid #bbb;margin-top:80px;padding-top:7px;text-align:center}'+
+'.note{font-size:9.5px;color:#606c7b;margin-top:22px;line-height:1.8}'+
+'thead{display:table-header-group}tr{page-break-inside:avoid}'+
+'.internal-banner{background:#fdecea;color:#b3372f;border:1px solid #e5a5a0;text-align:center;font-weight:800;padding:8px;border-radius:6px;margin-bottom:14px}'+
+'.quote-nav{display:flex;gap:9px;align-items:center;padding:11px 15px;background:#edf3fc;border-bottom:1px solid #cbd8e8;margin-bottom:16px}'+
+'.quote-nav button{background:#173b70;color:#fff;border:0;border-radius:7px;padding:9px 14px;cursor:pointer;font:13px Cairo,Tahoma}'+
+'.quote-nav button.gold{background:#a68135}.quote-nav .nav-note{font-size:11px;color:#526985}'+
+'@media print{.quote-nav{display:none!important}}';
+const PRINT_NAV='<nav class="quote-nav"><button onclick="if(window.opener){window.opener.focus()}window.close()">⌂ العودة للبرنامج</button>'+
+'<button class="gold" onclick="window.print()">🖨 طباعة / حفظ PDF</button><span class="nav-note">شريط الأزرار لا يظهر عند الطباعة</span></nav>';
+
+function groupByChapter(lines){
+  const map=new Map();
+  lines.forEach(x=>{ if(!map.has(x.chapter)) map.set(x.chapter,[]); map.get(x.chapter).push(x); });
+  return map;
+}
+async function printQuote(){
+  if(!state.projectId){ toast('اختر مشروعاً أولاً','err'); return; }
+  const approved=await confirmDialog('هل هذه المقايسة معتمدة للإرسال باسم الشركة من الشخص المفوض؟<br>اختر «نسخة معتمدة» لإظهار الختم المسجل، أو «مسودة» لطباعتها بدون اعتماد.','نسخة معتمدة',false,'مسودة غير معتمدة');
+  const popup=window.open('','_blank');
+  if(!popup){ toast('يرجى السماح بالنوافذ المنبثقة للطباعة','err'); return; }
+  popup.document.write('<html dir="rtl"><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap" rel="stylesheet"></head><body style="font-family:Cairo,Tahoma;padding:30px">جارٍ إعداد المقايسة...</body></html>');
+  try{
+    const d=await api('quoteData',state.projectId), f=fmt;
+    let i=0, rows='';
+    groupByChapter(d.lines).forEach((arr,ch)=>{
+      const sub=arr.reduce((a,x)=>a+x.total,0);
+      rows+='<tr class="chrow"><td colspan="6">'+esc(ch)+'</td><td class="num" style="text-align:left">'+f(sub)+'</td></tr>';
+      arr.forEach(x=>{ i++;
+        rows+='<tr><td>'+i+'</td><td>'+esc(x.sub)+'</td><td><b>'+esc(x.code)+'</b> — '+esc(x.description)+'</td><td>'+esc(x.unit)+'</td><td style="direction:ltr;text-align:left">'+f(x.qty)+'</td><td style="direction:ltr;text-align:left">'+f(x.price)+'</td><td style="direction:ltr;text-align:left">'+f(x.total)+'</td></tr>';
+      });
+    });
+    const total=d.summary;
+    const stamp=(approved&&d.stamp)?'<img src="'+d.stamp+'" alt="ختم الشركة" style="max-height:110px;max-width:175px;object-fit:contain">':'<span>موضع ختم الشركة</span>';
+    const status=approved&&d.stamp?'مقايسة معتمدة - طبقاً لتفويض الشركة':approved?'بانتظار وضع الختم الحقيقي والتوقيع':'مسودة للمراجعة - غير معتمدة';
+    popup.document.open();
+    popup.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>مقايسة تقديرية - '+esc(d.project.name)+'</title>'+
+      '<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap" rel="stylesheet"><style>'+PRINT_CSS+'</style></head><body>'+
+      PRINT_NAV+
+      '<div class="head"><div><div class="brand">'+esc(d.company.name)+'</div><div class="sub">'+esc(d.company.address)+' '+esc(d.company.phone)+'</div></div><div class="badge">'+esc(status)+'</div></div>'+
+      '<h1>مقايسة تقديرية للأعمال</h1>'+
+      '<div class="meta"><div><b>اسم المشروع:</b> '+esc(d.project.name)+'</div><div><b>اسم العميل:</b> '+esc(d.project.client)+'</div>'+
+      '<div><b>تاريخ الإصدار:</b> '+esc(d.date)+'</div><div><b>العملة:</b> دينار كويتي (د.ك)</div></div>'+
+      '<table><thead><tr><th>م</th><th>التصنيف الفرعي</th><th>رقم البند ووصف الأعمال</th><th>الوحدة</th><th>الكمية</th><th>سعر الوحدة (د.ك)</th><th>الإجمالي (د.ك)</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+      '<table class="sum"><tr><td>إجمالي قيمة الأعمال شامل المصاريف والأرباح</td><td style="direction:ltr;text-align:left">'+f(total.sales)+'</td></tr>'+
+      (total.overhead+total.profit>0?'<tr><td>إضافات تسعير البنود القديمة (إن وجدت)</td><td style="direction:ltr;text-align:left">'+f(total.overhead+total.profit)+'</td></tr>':'')+
+      '<tr><td>الضريبة إن وجدت ('+fmtPct(d.project.tax)+'%)</td><td style="direction:ltr;text-align:left">'+f(total.tax)+'</td></tr>'+
+      '<tr><td>إجمالي المقايسة التقديرية (د.ك)</td><td style="direction:ltr;text-align:left">'+f(total.final)+'</td></tr></table>'+
+      '<div class="note">هذه مقايسة تقديرية وفق الكميات والأسعار المبينة أعلاه، ولا تُعد عقد مقاولة أو أمراً بالتنفيذ. تخضع الكميات الفعلية وأي أعمال إضافية للاتفاق الكتابي بين الطرفين.</div>'+
+      '<div class="foot"><div><b>ختم الشركة</b><div class="seal">'+stamp+'</div></div><div><b>المفوض بالتوقيع</b><div class="sign">الاسم والتوقيع</div></div></div>'+
+      '</body></html>');
+    popup.document.close();
+    toast('تم تجهيز المقايسة للطباعة أو الحفظ PDF','ok');
+  }catch(e){ popup.close(); toast(e.message,'err'); }
+}
+async function printCostReport(){
+  if(!state.projectId){ toast('اختر مشروعاً أولاً','err'); return; }
+  const popup=window.open('','_blank');
+  if(!popup){ toast('يرجى السماح بالنوافذ المنبثقة للطباعة','err'); return; }
+  popup.document.write('<html dir="rtl"><head><meta charset="utf-8"></head><body style="font-family:Cairo,Tahoma;padding:30px">جارٍ إعداد التقرير...</body></html>');
+  try{
+    const d=await api('costReportData',state.projectId), f=fmt;
+    const rows=d.lines.map((x,i)=>{
+      const profit=x.total-x.costTotal, margin=x.total>0?(profit/x.total*100):0;
+      return '<tr><td>'+(i+1)+'</td><td><b>'+esc(x.code)+'</b> — '+esc(x.description)+'</td><td>'+esc(x.unit)+'</td>'+
+      '<td style="direction:ltr;text-align:left">'+f(x.qty)+'</td>'+
+      '<td style="direction:ltr;text-align:left">'+f(x.materials)+'</td><td style="direction:ltr;text-align:left">'+f(x.labor)+'</td>'+
+      '<td style="direction:ltr;text-align:left">'+f(x.equipment)+'</td><td style="direction:ltr;text-align:left">'+f(x.subcontractor)+'</td>'+
+      '<td style="direction:ltr;text-align:left">'+fmtPct(x.waste)+'%</td>'+
+      '<td style="direction:ltr;text-align:left">'+f(x.cost)+'</td><td style="direction:ltr;text-align:left">'+f(x.costTotal)+'</td>'+
+      '<td style="direction:ltr;text-align:left">'+f(x.price)+'</td><td style="direction:ltr;text-align:left">'+f(x.total)+'</td>'+
+      '<td style="direction:ltr;text-align:left;color:'+(profit>=0?'#1e7a4f':'#b3372f')+'">'+f(profit)+'</td>'+
+      '<td style="direction:ltr;text-align:left">'+fmtPct(margin)+'%</td></tr>';
+    }).join('');
+    const s=d.summary;
+    popup.document.open();
+    popup.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>تقرير تكلفة داخلي - '+esc(d.project.name)+'</title>'+
+      '<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;800&display=swap" rel="stylesheet"><style>'+PRINT_CSS+'@page{size:A4 landscape}</style></head><body>'+
+      PRINT_NAV+
+      '<div class="internal-banner">تقرير داخلي للإدارة — يحتوي على التكاليف وهوامش الربح — لا يُقدَّم للعميل</div>'+
+      '<div class="head"><div><div class="brand">'+esc(d.company.name)+'</div><div class="sub">'+esc(d.company.address)+' '+esc(d.company.phone)+'</div></div><div class="badge">تقرير تحليل تكلفة</div></div>'+
+      '<h1>تقرير التكلفة وهوامش الربح — '+esc(d.project.name)+'</h1>'+
+      '<div class="meta"><div><b>العميل:</b> '+esc(d.project.client)+'</div><div><b>التاريخ:</b> '+esc(d.date)+'</div>'+
+      '<div><b>نسب المشروع:</b> مصاريف '+fmtPct(d.project.overhead)+'% / ربح '+fmtPct(d.project.profit)+'% / ضريبة '+fmtPct(d.project.tax)+'%</div><div><b>عدد البنود:</b> '+s.count+'</div></div>'+
+      '<table><thead><tr><th>م</th><th>البند</th><th>الوحدة</th><th>الكمية</th><th>مواد</th><th>عمالة</th><th>معدات</th><th>مقاول باطن</th><th>هالك %</th><th>تكلفة الوحدة</th><th>إجمالي التكلفة</th><th>سعر البيع</th><th>إجمالي البيع</th><th>الربح</th><th>الهامش %</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+      '<table class="sum">'+
+      '<tr><td>إجمالي تكلفة التنفيذ</td><td style="direction:ltr;text-align:left">'+f(s.cost)+'</td></tr>'+
+      '<tr><td>إجمالي البيع شامل المصاريف والأرباح</td><td style="direction:ltr;text-align:left">'+f(s.sales)+'</td></tr>'+
+      '<tr><td>الفرق قبل الضريبة</td><td style="direction:ltr;text-align:left">'+f(s.difference)+'</td></tr>'+
+      '<tr><td>هامش الربح من البيع</td><td style="direction:ltr;text-align:left">'+fmtPct(s.margin)+'%</td></tr>'+
+      '<tr><td>الإجمالي بعد الضريبة (د.ك)</td><td style="direction:ltr;text-align:left">'+f(s.final)+'</td></tr></table>'+
+      '<div class="foot"><div><b>إعداد</b><div class="sign">المهندس المسؤول</div></div><div><b>اعتماد</b><div class="sign">الإدارة</div></div></div>'+
+      '</body></html>');
+    popup.document.close();
+    toast('تم تجهيز التقرير الداخلي','ok');
+  }catch(e){ popup.close(); toast(e.message,'err'); }
+}
+function exportBOQ(){
+  if(!state.projectId){ toast('اختر مشروعاً أولاً','err'); return; }
+  withBusy($('btnBOQ'),async()=>{
+    const url=await api('createBOQ',state.projectId);
+    window.open(url,'_blank');
+    toast('تم إنشاء جدول الكميات في Google Sheets','ok');
+  })();
+}
+
+/* --------------------------------- الإعدادات -------------------------------- */
+async function renderSettings(){
+  try{ state.settings=await api('companySettings'); }catch(e){}
+  const s=state.settings||{};
+  $('sName').value=s.name||''; $('sAddress').value=s.address||'';
+  $('sPhone').value=s.phone||''; $('sStamp').value=s.stampId||'';
+  renderAccess();
+  const d=state.defaults||{};
+  $('dOver').value=d.overhead||0; $('dProfit').value=d.profit||0; $('dTax').value=d.tax||0;
+  try{
+    const log=await api('getLog',100);
+    $('logTbody').innerHTML=log.length?log.map(r=>'<tr><td class="num">'+esc(r.date)+'</td><td>'+esc(r.user)+'</td><td>'+esc(r.action)+'</td><td>'+esc(r.details)+'</td></tr>').join('')
+      :'<tr><td colspan="4" class="empty">لا يوجد سجل بعد</td></tr>';
+  }catch(e){ $('logTbody').innerHTML='<tr><td colspan="4" class="empty">تعذر تحميل السجل</td></tr>'; }
+}
+async function renderAccess(){
+  try{ state.access=await api('accessSettings'); }catch(e){}
+  const a=state.access;
+  $('accessCard').classList.toggle('hidden',!(a&&a.isAdmin));
+  if(!a||!a.isAdmin) return;
+  $('sAllowed').value=(a.allowed||[]).join('\n');
+  const box=$('accessState');
+  box.className=a.enabled?'price-good':'price-warning';
+  box.textContent=a.enabled?'✓ الدخول مقصور على '+a.allowed.length+' مستخدم (بالإضافة إلى المالك)':'⚠️ القائمة فارغة: النظام مفتوح حالياً لكل من يملك الرابط';
+  box.style.marginBottom='12px';
+}
+function saveAccessUI(btn){
+  withBusy(btn,async()=>{
+    state.access=await api('setAllowedUsers',$('sAllowed').value);
+    renderAccess();
+    toast('تم حفظ صلاحيات الدخول','ok');
+  })();
+}
+function saveCompanyUI(btn){
+  withBusy(btn,async()=>{
+    state.settings=await api('setCompanyDetails',$('sAddress').value,$('sPhone').value,$('sStamp').value,$('sName').value);
+    toast('تم حفظ بيانات الشركة','ok');
+  })();
+}
+function saveDefaultsUI(btn){
+  withBusy(btn,async()=>{
+    state.defaults=await api('setDefaultRates',$('dOver').value,$('dProfit').value,$('dTax').value);
+    toast('تم حفظ النسب الافتراضية','ok');
+  })();
+}
+
+boot();
+</script>
+</body>
+</html>
