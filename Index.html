@@ -170,6 +170,17 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
 #splash{position:fixed;inset:0;background:linear-gradient(135deg,#0c2342,#173a66);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff}
 #splash .logo{width:74px;height:74px;border-radius:18px;background:linear-gradient(135deg,var(--gold),#8a6a2e);display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:18px}
 #splash h1{font-size:20px;margin:0 0 6px}
+#login{position:fixed;inset:0;background:linear-gradient(135deg,#0c2342,#173a66);z-index:250;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto}
+.login-box{background:#fff;border-radius:18px;width:100%;max-width:400px;padding:30px 28px;box-shadow:0 20px 60px rgba(0,0,0,.35);text-align:center}
+.login-box .logo{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,var(--gold),#8a6a2e);display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 14px}
+.login-box h1{font-size:17px;margin:0 0 4px;color:var(--navy)}
+.login-box p{font-size:12.5px;color:var(--muted);margin:0 0 18px;line-height:1.8}
+.login-box label{display:block;text-align:right;margin:12px 0 5px}
+.login-box .btn{width:100%;justify-content:center;margin-top:18px;padding:12px}
+.login-err{background:var(--red-bg);color:var(--red);border-radius:9px;padding:10px 12px;font-size:13px;font-weight:600;margin-top:14px;text-align:right}
+.side-user{padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);color:#dbe6f5;font-size:12.5px;display:flex;align-items:center;gap:8px;justify-content:space-between}
+.side-user button{background:rgba(255,255,255,.1);border:0;color:#fff;border-radius:8px;padding:6px 10px;cursor:pointer;font-family:inherit;font-size:12px}
+.side-user button:hover{background:rgba(255,255,255,.2)}
 #splash p{color:#b9cde6;font-size:13px}
 .spinner{width:34px;height:34px;border:3px solid rgba(255,255,255,.2);border-top-color:var(--gold2);border-radius:50%;animation:spin .8s linear infinite;margin-top:18px}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -185,7 +196,7 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
 
 @media(max-width:900px){
   #sidebar{width:64px}
-  #sidebar .side-brand h1,#sidebar .side-brand .sub,#sidebar .side-foot,#sidebar .nav-label{display:none}
+  #sidebar .side-brand h1,#sidebar .side-brand .sub,#sidebar .side-foot,#sidebar .nav-label,#sidebar .side-user .who{display:none}
   .nav-item{justify-content:center;padding:12px}
   .p-grid,.p-grid.g5{grid-template-columns:repeat(2,minmax(0,1fr))}
   main{padding:16px 12px 50px}
@@ -202,12 +213,30 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
   <div class="spinner"></div>
 </div>
 
+<div id="login" class="hidden">
+  <form class="login-box" onsubmit="return false" autocomplete="on">
+    <div class="logo">🏗️</div>
+    <h1 id="loginCompany">شركة منارات المتحدة للمقاولات العامة للمباني</h1>
+    <p id="loginHint">نظام المقايسات والتسعير — سجّل الدخول للمتابعة</p>
+    <label for="lgUser">اسم المستخدم</label>
+    <input id="lgUser" dir="ltr" autocomplete="username" maxlength="30">
+    <label for="lgPass">كلمة المرور</label>
+    <input id="lgPass" type="password" dir="ltr" autocomplete="current-password" maxlength="100">
+    <div id="lgPass2Wrap" class="hidden">
+      <label for="lgPass2">تأكيد كلمة المرور</label>
+      <input id="lgPass2" type="password" dir="ltr" autocomplete="new-password" maxlength="100">
+    </div>
+    <button class="btn" id="lgBtn" type="submit" onclick="submitLogin(this)">دخول</button>
+    <div id="lgErr" class="login-err hidden"></div>
+  </form>
+</div>
+
 <div id="app" class="hidden">
   <aside id="sidebar">
     <div class="side-brand">
       <div class="logo">🏗️</div>
       <h1>منارات المتحدة</h1>
-      <div class="sub">نظام المقايسات والتسعير v3.1</div>
+      <div class="sub">نظام المقايسات والتسعير v3.2</div>
     </div>
     <nav class="side-nav" id="sideNav">
       <button class="nav-item active" data-view="dashboard"><span class="ic">📊</span><span class="nav-label">لوحة التحكم</span></button>
@@ -217,6 +246,7 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
       <button class="nav-item" data-view="reports"><span class="ic">🖨️</span><span class="nav-label">التقارير والطباعة</span></button>
       <button class="nav-item" data-view="settings"><span class="ic">⚙️</span><span class="nav-label">الإعدادات</span></button>
     </nav>
+    <div class="side-user"><span class="who">👤 <span id="whoName"></span></span><button onclick="doLogout()" title="تسجيل الخروج">خروج ⎋</button></div>
     <div class="side-foot">شركة منارات المتحدة للمقاولات العامة للمباني<br>جميع البيانات محفوظة في Google Sheets</div>
   </aside>
 
@@ -393,7 +423,7 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
 
       <!-- الإعدادات -->
       <section id="view-settings" class="view hidden">
-        <div class="card">
+        <div class="card admin-only">
           <h3 class="card-title"><span class="dot"></span>بيانات الشركة والختم المعتمد</h3>
           <p class="muted" style="font-size:12.5px;margin-top:-6px">ارفع صورة الختم الحقيقي إلى Google Drive ثم أدخل معرّف الملف (File ID). لا يُعد إصدار المقايسة اعتماداً رسمياً إلا بعد موافقة المفوض بالتوقيع.</p>
           <div class="fields">
@@ -404,7 +434,7 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
           </div>
           <div style="margin-top:14px"><button class="btn" onclick="saveCompanyUI(this)">✓ حفظ بيانات الشركة</button></div>
         </div>
-        <div class="card">
+        <div class="card admin-only">
           <h3 class="card-title"><span class="dot"></span>النسب الافتراضية للمشاريع الجديدة</h3>
           <div class="fields">
             <div><label>المصاريف الإدارية %</label><input id="dOver" type="number" min="0" step="any"></div>
@@ -413,12 +443,20 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
           </div>
           <div style="margin-top:14px"><button class="btn" onclick="saveDefaultsUI(this)">✓ حفظ النسب الافتراضية</button></div>
         </div>
-        <div class="card hidden" id="accessCard">
-          <h3 class="card-title"><span class="dot"></span>صلاحيات الدخول للنظام</h3>
-          <p class="muted" style="font-size:12.5px;margin-top:-6px">اكتب بريد Google لكل مستخدم مصرح له (بريد في كل سطر). مالك ملف الجدول مصرح له دائماً. إذا تُركت القائمة فارغة يبقى النظام مفتوحاً لكل من يملك الرابط.</p>
-          <div id="accessState" class="price-warning" style="margin-bottom:12px"></div>
-          <textarea id="sAllowed" rows="4" dir="ltr" style="text-align:left" placeholder="user1@gmail.com&#10;user2@gmail.com"></textarea>
-          <div style="margin-top:14px"><button class="btn" onclick="saveAccessUI(this)">✓ حفظ قائمة المصرح لهم</button></div>
+        <div class="card admin-only">
+          <h3 class="card-title"><span class="dot"></span>المستخدمون وصلاحيات الدخول</h3>
+          <p class="muted" style="font-size:12.5px;margin-top:-6px">المدير يدير المستخدمين وبيانات الشركة والنسب الافتراضية. المستخدم العادي يعمل على المشروعات والتسعير والتقارير. كلمات المرور لا تُحفظ كنص ولا يمكن عرضها؛ يمكن فقط تعيين كلمة جديدة.</p>
+          <div class="table-wrap"><table><thead><tr><th>اسم المستخدم</th><th>الصلاحية</th><th>الحالة</th><th>آخر دخول</th><th></th></tr></thead><tbody id="usersTbody"></tbody></table></div>
+          <div style="margin-top:14px"><button class="btn" onclick="userModal()">＋ مستخدم جديد</button></div>
+        </div>
+        <div class="card">
+          <h3 class="card-title"><span class="dot"></span>تغيير كلمة المرور الخاصة بي</h3>
+          <form class="fields" onsubmit="return false">
+            <div><label>كلمة المرور الحالية</label><input id="pwOld" type="password" dir="ltr" autocomplete="current-password" maxlength="100"></div>
+            <div><label>كلمة المرور الجديدة (8 أحرف على الأقل)</label><input id="pwNew" type="password" dir="ltr" autocomplete="new-password" maxlength="100"></div>
+            <div><label>تأكيد كلمة المرور الجديدة</label><input id="pwNew2" type="password" dir="ltr" autocomplete="new-password" maxlength="100"></div>
+          </form>
+          <div style="margin-top:14px"><button class="btn" onclick="changePasswordUI(this)">✓ تغيير كلمة المرور</button></div>
         </div>
         <div class="card">
           <h3 class="card-title"><span class="dot"></span>سجل التعديلات (آخر 100 عملية)</h3>
@@ -435,7 +473,7 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
 /* ============================== النواة والحالة ============================== */
 const $=id=>document.getElementById(id);
 const state={projects:[],catalog:[],catalogAll:[],lines:[],projectId:'',settings:{},defaults:{},stats:null,
-             chapter:'',sub:'',editLineId:'',costMode:'bd',view:'dashboard',access:null};
+             chapter:'',sub:'',editLineId:'',costMode:'bd',view:'dashboard',token:'',user:null};
 const STATUS_LIST=['مسودة','قيد التسعير','معتمد','قيد التنفيذ','منفذ','ملغي'];
 const fmt=n=>Number(n||0).toLocaleString('en-US',{minimumFractionDigits:3,maximumFractionDigits:3});
 const fmtPct=n=>Number(n||0).toLocaleString('en-US',{maximumFractionDigits:2});
@@ -452,12 +490,27 @@ function toast(t,type){
   $('toast').appendChild(el);
   setTimeout(()=>el.remove(),4500);
 }
+/* استدعاء مباشر لدوال الدخول فقط (لا تحتاج جلسة) */
+function direct(name,...args){
+  return new Promise((resolve,reject)=>{
+    google.script.run
+      .withSuccessHandler(resolve)
+      .withFailureHandler(e=>reject(new Error(e.message||String(e))))
+      [name](...args);
+  });
+}
+/* كل دوال البيانات تمر عبر rpc مع رمز الجلسة */
+const SESSION_ERR=/انتهت الجلسة|يجب تسجيل الدخول/;
 function api(name,...args){
   return new Promise((resolve,reject)=>{
     google.script.run
       .withSuccessHandler(r=>{ if(r===null||r===undefined) reject(new Error('الدالة '+name+' أعادت نتيجة فارغة')); else resolve(r); })
-      .withFailureHandler(e=>reject(new Error(e.message||String(e))))
-      [name](...args);
+      .withFailureHandler(e=>{
+        const msg=e.message||String(e);
+        if(SESSION_ERR.test(msg)) showLogin('انتهت الجلسة؛ سجّل الدخول من جديد');
+        reject(new Error(msg));
+      })
+      .rpc(state.token,name,args);
   });
 }
 function withBusy(btn,fn){
@@ -518,31 +571,85 @@ async function reloadProjects(){
   const [ps,st]=await Promise.all([api('projects'), api('projectsOverview').catch(()=>null)]);
   state.projects=ps; if(st) state.stats=st;
 }
-async function boot(){
+/* ------------------------------ تسجيل الدخول ------------------------------- */
+function saveToken(t){ state.token=t||''; try{ if(t) sessionStorage.setItem('manaratToken',t); else sessionStorage.removeItem('manaratToken'); }catch(e){} }
+function readToken(){ try{ return sessionStorage.getItem('manaratToken')||''; }catch(e){ return ''; } }
+function isAdmin(){ return !!(state.user&&state.user.role==='admin'); }
+function applyRole(){
+  $('whoName').textContent=state.user?state.user.username:'';
+  document.querySelectorAll('.admin-only').forEach(el=>el.classList.toggle('hidden',!isAdmin()));
+}
+let loginMode='login';
+async function showLogin(message){
+  saveToken(''); state.user=null; closeModal();
+  $('app').classList.add('hidden'); $('splash').classList.add('hidden'); $('login').classList.remove('hidden');
+  $('lgPass').value=''; $('lgPass2').value='';
+  const err=$('lgErr'); err.classList.toggle('hidden',!message); err.textContent=message||'';
+  let st={hasUsers:true,canSetup:false};
+  try{ st=await direct('authState'); }catch(e){ err.classList.remove('hidden'); err.textContent='تعذر الاتصال بالخادم: '+e.message; }
+  if(st.company) $('loginCompany').textContent=st.company;
+  if(!st.hasUsers){
+    loginMode='setup';
+    $('lgPass2Wrap').classList.remove('hidden'); $('lgBtn').textContent='إنشاء حساب المدير';
+    $('lgPass').setAttribute('autocomplete','new-password');
+    $('loginHint').textContent=st.canSetup?'أول تشغيل: أنشئ حساب مدير النظام (اسم مستخدم وكلمة مرور لا تقل عن 8 أحرف)'
+      :'لم يُنشأ حساب المدير بعد. افتح هذا الرابط من حساب Google المالك لملف الجدول لإنشائه.';
+    $('lgBtn').disabled=!st.canSetup;
+  }else{
+    loginMode='login';
+    $('lgPass2Wrap').classList.add('hidden'); $('lgBtn').textContent='دخول'; $('lgBtn').disabled=false;
+    $('lgPass').setAttribute('autocomplete','current-password');
+    $('loginHint').textContent='نظام المقايسات والتسعير — سجّل الدخول للمتابعة';
+  }
+  $('lgUser').focus();
+}
+async function submitLogin(btn){
+  const err=$('lgErr'), user=$('lgUser').value.trim(), pass=$('lgPass').value;
+  const fail=m=>{ err.textContent=m; err.classList.remove('hidden'); };
+  err.classList.add('hidden');
+  if(!user||!pass) return fail('أدخل اسم المستخدم وكلمة المرور');
+  if(loginMode==='setup'){
+    if(pass.length<8) return fail('كلمة المرور يجب ألا تقل عن 8 أحرف');
+    if(pass!==$('lgPass2').value) return fail('كلمتا المرور غير متطابقتين');
+  }
+  const old=btn.textContent; btn.disabled=true; btn.textContent='جارٍ التحقق...';
   try{
-    let b=null;
-    try{ b=await api('bootstrap'); }catch(e){ if(/غير مصرح/.test(e.message)) throw e; }
-    if(b){
-      state.projects=b.projects; setCatalog(b.catalogAll);
-      state.settings=b.settings||{}; state.defaults=b.defaults||{overhead:0,profit:0,tax:0};
-      state.stats=b.stats||null; state.access=b.access||null;
-    }else{
-      /* توافق مع نسخة خادم أقدم لا تحتوي bootstrap */
-      state.projects=await api('projects');
-      await reloadCatalog();
-      try{ state.settings=await api('companySettings'); }catch(e){}
-      try{ state.defaults=await api('defaultRates'); }catch(e){ state.defaults={overhead:0,profit:0,tax:0}; }
-      try{ state.stats=await api('projectsOverview'); }catch(e){ state.stats=null; }
-    }
+    const r=await direct(loginMode==='setup'?'setupAdmin':'login',user,pass);
+    saveToken(r.token); state.user=r.user;
+    $('lgPass').value=''; $('lgPass2').value='';
+    $('login').classList.add('hidden'); $('splash').classList.remove('hidden');
+    await loadApp();
+  }catch(e){ fail(e.message); }
+  finally{ btn.disabled=false; btn.textContent=old; }
+}
+async function doLogout(){
+  const t=state.token;
+  try{ await direct('logout',t); }catch(e){}
+  showLogin('');
+}
+async function loadApp(){
+  try{
+    const b=await api('bootstrap');
+    state.projects=b.projects; setCatalog(b.catalogAll);
+    state.settings=b.settings||{}; state.defaults=b.defaults||{overhead:0,profit:0,tax:0};
+    state.stats=b.stats||null; state.user=b.user||state.user;
+    state.projectId=''; state.lines=[]; state.editLineId='';
+    applyRole();
     renderGlobalProjects();
     fillStatusFilters();
     switchView('dashboard');
-  }catch(e){
-    toast('خطأ في تحميل البيانات: '+e.message,'err');
-  }finally{
-    $('splash').classList.add('hidden');
+    $('splash').classList.add('hidden'); $('login').classList.add('hidden');
     $('app').classList.remove('hidden');
+  }catch(e){
+    if(!SESSION_ERR.test(e.message)){
+      $('splash').classList.add('hidden');
+      showLogin('خطأ في تحميل البيانات: '+e.message);
+    }
   }
+}
+async function boot(){
+  state.token=readToken();
+  if(state.token) await loadApp(); else showLogin('');
 }
 async function refreshAll(){
   try{
@@ -1158,35 +1265,68 @@ function exportBOQ(){
 
 /* --------------------------------- الإعدادات -------------------------------- */
 async function renderSettings(){
+  applyRole();
   try{ state.settings=await api('companySettings'); }catch(e){}
   const s=state.settings||{};
   $('sName').value=s.name||''; $('sAddress').value=s.address||'';
   $('sPhone').value=s.phone||''; $('sStamp').value=s.stampId||'';
-  renderAccess();
   const d=state.defaults||{};
   $('dOver').value=d.overhead||0; $('dProfit').value=d.profit||0; $('dTax').value=d.tax||0;
+  if(isAdmin()){
+    try{ renderUsers(await api('listUsers')); }catch(e){ $('usersTbody').innerHTML='<tr><td colspan="5" class="empty">تعذر تحميل المستخدمين</td></tr>'; }
+  }
   try{
     const log=await api('getLog',100);
     $('logTbody').innerHTML=log.length?log.map(r=>'<tr><td class="num">'+esc(r.date)+'</td><td>'+esc(r.user)+'</td><td>'+esc(r.action)+'</td><td>'+esc(r.details)+'</td></tr>').join('')
       :'<tr><td colspan="4" class="empty">لا يوجد سجل بعد</td></tr>';
   }catch(e){ $('logTbody').innerHTML='<tr><td colspan="4" class="empty">تعذر تحميل السجل</td></tr>'; }
 }
-async function renderAccess(){
-  try{ state.access=await api('accessSettings'); }catch(e){}
-  const a=state.access;
-  $('accessCard').classList.toggle('hidden',!(a&&a.isAdmin));
-  if(!a||!a.isAdmin) return;
-  $('sAllowed').value=(a.allowed||[]).join('\n');
-  const box=$('accessState');
-  box.className=a.enabled?'price-good':'price-warning';
-  box.textContent=a.enabled?'✓ الدخول مقصور على '+a.allowed.length+' مستخدم (بالإضافة إلى المالك)':'⚠️ القائمة فارغة: النظام مفتوح حالياً لكل من يملك الرابط';
-  box.style.marginBottom='12px';
+/* ------------------------------ إدارة المستخدمين ---------------------------- */
+function renderUsers(list){
+  state.users=list||[];
+  $('usersTbody').innerHTML=state.users.map(u=>'<tr><td dir="ltr" style="text-align:right;font-weight:700">'+esc(u.username)+'</td>'+
+    '<td>'+(u.role==='admin'?'مدير':'مستخدم')+'</td>'+
+    '<td><span class="badge '+(u.active?'معتمد':'ملغي')+'">'+(u.active?'مفعّل':'موقوف')+'</span></td>'+
+    '<td class="num">'+esc(u.lastLogin||'—')+'</td>'+
+    '<td style="white-space:nowrap"><button class="btn secondary sm" onclick="userModal('+jsArg(u.username)+')">تعديل</button> '+
+    '<button class="btn danger sm" onclick="deleteUserUI('+jsArg(u.username)+')">حذف</button></td></tr>').join('')
+    ||'<tr><td colspan="5" class="empty">لا يوجد مستخدمون</td></tr>';
 }
-function saveAccessUI(btn){
+function userModal(username){
+  const u=username?(state.users||[]).find(x=>x.username===username):null;
+  openModal(u?'تعديل مستخدم':'مستخدم جديد',
+    '<form class="fields" onsubmit="return false">'+
+    '<div class="full"><label>اسم المستخدم</label><input id="uName" dir="ltr" maxlength="30" autocomplete="off" value="'+esc(u?u.username:'')+'" '+(u?'disabled':'')+'></div>'+
+    '<div class="full"><label>'+(u?'كلمة مرور جديدة (اتركها فارغة للإبقاء على الحالية)':'كلمة المرور (8 أحرف على الأقل)')+'</label><input id="uPass" type="password" dir="ltr" maxlength="100" autocomplete="new-password"></div>'+
+    '<div><label>الصلاحية</label><select id="uRole"><option value="user">مستخدم</option><option value="admin"'+(u&&u.role==='admin'?' selected':'')+'>مدير</option></select></div>'+
+    '<div><label>الحالة</label><select id="uActive"><option value="1">مفعّل</option><option value="0"'+(u&&!u.active?' selected':'')+'>موقوف</option></select></div>'+
+    '</form>',
+    '<button class="btn" id="uSave">✓ حفظ</button><button class="btn secondary" onclick="closeModal()">إلغاء</button>');
+  $('uSave').onclick=function(){
+    withBusy(this,async()=>{
+      const pass=$('uPass').value;
+      if(!u&&pass.length<8) throw new Error('كلمة المرور يجب ألا تقل عن 8 أحرف');
+      if(pass&&pass.length<8) throw new Error('كلمة المرور يجب ألا تقل عن 8 أحرف');
+      const list=await api('saveUser',{username:u?u.username:$('uName').value.trim(),password:pass,role:$('uRole').value,active:$('uActive').value==='1',isNew:!u});
+      closeModal(); renderUsers(list);
+      toast(u?'تم تعديل المستخدم':'تمت إضافة المستخدم','ok');
+    })();
+  };
+}
+async function deleteUserUI(username){
+  if(!await confirmDialog('حذف المستخدم <b>'+esc(username)+'</b> نهائياً؟ لن يستطيع الدخول بعد ذلك.','حذف',true)) return;
+  try{ renderUsers(await api('deleteUser',username)); toast('تم حذف المستخدم','ok'); }catch(e){ toast(e.message,'err'); }
+}
+function changePasswordUI(btn){
   withBusy(btn,async()=>{
-    state.access=await api('setAllowedUsers',$('sAllowed').value);
-    renderAccess();
-    toast('تم حفظ صلاحيات الدخول','ok');
+    const o=$('pwOld').value, n=$('pwNew').value;
+    if(!o||!n) throw new Error('أدخل كلمة المرور الحالية والجديدة');
+    if(n.length<8) throw new Error('كلمة المرور الجديدة يجب ألا تقل عن 8 أحرف');
+    if(n!==$('pwNew2').value) throw new Error('كلمتا المرور غير متطابقتين');
+    const r=await api('changeMyPassword',o,n);
+    saveToken(r.token);
+    $('pwOld').value=''; $('pwNew').value=''; $('pwNew2').value='';
+    toast('تم تغيير كلمة المرور','ok');
   })();
 }
 function saveCompanyUI(btn){

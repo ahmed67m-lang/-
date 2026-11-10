@@ -1,11 +1,13 @@
 /** ============================================================================
- *  نظام منارات المتحدة للمقايسات والتسعير — النسخة الاحترافية v3.1 (نسخة النشر)
+ *  نظام منارات المتحدة للمقايسات والتسعير — النسخة الاحترافية v3.2 (نسخة النشر)
  *  Google Apps Script مرتبط بجدول Google Sheets
  *  متوافق تماماً مع البيانات القديمة: لا يحذف ولا يعدّل أعمدة أو صفوفاً موجودة،
  *  ويضيف فقط أعمدة التكلفة التفصيلية في نهاية ورقة LINES عند الحاجة.
  *
- *  الجديد في v3.1:
- *   - صلاحيات دخول (قائمة مستخدمين مصرح لهم) على كل دالة يستدعيها المتصفح.
+ *  الجديد في v3.2:
+ *   - تسجيل دخول باسم مستخدم وكلمة مرور (rpc) — لا تُنفَّذ أي دالة بيانات بدون جلسة صالحة.
+ *   - إدارة المستخدمين من شاشة الإعدادات (مدير / مستخدم)، وكلمات المرور تُحفظ مشفّرة (hash) فقط.
+ *  من v3.1:
  *   - قفل LockService على كل عمليات الكتابة لمنع تضارب مستخدمين في اللحظة نفسها.
  *   - تحديد صف الكتابة من بيانات الورقة الخام (لا يتأثر بوجود صفوف فارغة).
  *   - حفظ رقم البند كنص حتى لا يحوّله الجدول إلى تاريخ (مثل 3/5).
@@ -33,7 +35,7 @@ function tab_(n){
   return sh;
 }
 function props_(){ return PropertiesService.getScriptProperties(); }
-function who_(){ return me_() || 'مستخدم'; }
+function who_(){ return CURRENT_ ? CURRENT_.username : (me_() || 'النظام'); }
 function log_(a,d){ tab_(S.LOG).appendRow([new Date(), who_(), a, safe_(d)]); }
 function rows_(n){ const v = tab_(n).getDataRange().getValues(); return v.slice(1).filter(r=>r[0]!==''&&r[0]!==null); }
 function id_(){ return Utilities.getUuid(); }
@@ -91,50 +93,179 @@ function deleteRows_(sh, startRow, count){
   sh.deleteRows(startRow, count);
 }
 
-/* ------------------------------- الصلاحيات -------------------------------- */
+/* --------------------------- الدخول والصلاحيات ---------------------------- */
+/** المستخدم الحالي — لا يُضبط إلا داخل rpc بعد التحقق من الجلسة */
+let CURRENT_ = null;
+const HASH_ROUNDS = 200, SESSION_SECONDS = 21600, MAX_FAILS = 5, LOCK_SECONDS = 900;
+const ROLES = ['admin','user'];
+
 function me_(){ try{ return String(Session.getActiveUser().getEmail()||'').toLowerCase(); }catch(e){ return ''; } }
-/** مدير النظام: خاصية ADMIN_EMAIL إن وُجدت، وإلا مالك ملف الجدول */
-function admin_(){
+/** مالك ملف الجدول (أو خاصية ADMIN_EMAIL إن وُجدت) — هو الوحيد الذي ينشئ حساب المدير الأول */
+function owner_(){
   const p = clean_(props_().getProperty('ADMIN_EMAIL')).toLowerCase();
   if(p) return p;
   try{ const o = db_().getOwner(); return o ? String(o.getEmail()||'').toLowerCase() : ''; }catch(e){ return ''; }
 }
-function allowed_(){
-  return String(props_().getProperty('ALLOWED_USERS')||'').split(/[,;\s]+/).map(x=>x.trim().toLowerCase()).filter(Boolean);
+function isOwner_(){ const me = me_(); return !!me && me === owner_(); }
+/** كل دالة بيانات تبدأ بهذا الفحص: الاستدعاء المباشر من المتصفح (بدون rpc) يُرفض */
+function guard_(){ if(!CURRENT_) throw Error('يجب تسجيل الدخول أولاً'); }
+function adminOnly_(){ guard_(); if(CURRENT_.role!=='admin') throw Error('هذا الإجراء لمدير النظام فقط'); }
+
+function userKey_(name){ return 'USER_' + clean_(name).toLowerCase(); }
+function getUser_(name){
+  const raw = props_().getProperty(userKey_(name));
+  if(!raw) return null;
+  try{ return JSON.parse(raw); }catch(e){ return null; }
 }
-function isAdmin_(){ const me = me_(); return !!me && me === admin_(); }
-/**
- * يمنع غير المصرح لهم. إذا كانت قائمة ALLOWED_USERS فارغة فالنظام مفتوح لكل من يملك الرابط
- * (السلوك القديم) — لذلك يجب تعبئة القائمة قبل النشر من شاشة الإعدادات أو بدالة setAllowedUsers.
- */
-function guard_(){
-  const list = allowed_();
-  if(!list.length) return;
-  const me = me_();
-  if(me && (list.indexOf(me)>=0 || me === admin_())) return;
-  throw Error('غير مصرح لهذا الحساب باستخدام النظام' + (me ? ' ('+me+')' : '') + '. راجع مدير النظام.');
+function putUser_(u){ props_().setProperty(userKey_(u.username), JSON.stringify(u)); }
+function allUsers_(){
+  const p = props_();
+  return p.getKeys().filter(k=>k.indexOf('USER_')===0).map(k=>{ try{ return JSON.parse(p.getProperty(k)); }catch(e){ return null; } })
+    .filter(Boolean).sort((a,b)=>String(a.username).localeCompare(String(b.username)));
 }
-function accessInfo_(){
-  const admin = isAdmin_();
-  return { me: me_(), isAdmin: admin, enabled: allowed_().length>0, allowed: admin ? allowed_() : [] };
+function publicUser_(u){ return {username:u.username, role:u.role, active:u.active!==false, created:u.created||'', lastLogin:u.lastLogin||''}; }
+function activeAdmins_(list){ return list.filter(u=>u.role==='admin' && u.active!==false).length; }
+function checkUsername_(name){
+  const n = clean_(name);
+  if(!/^[A-Za-z0-9؀-ۿ._-]{3,30}$/.test(n)) throw Error('اسم المستخدم من 3 إلى 30 حرفاً أو رقماً بدون مسافات');
+  return n;
 }
-function accessSettings(){ guard_(); return accessInfo_(); }
-/** تحديد المستخدمين المصرح لهم (إيميلات مفصولة بفاصلة أو سطر) — للمدير فقط. قائمة فارغة = النظام مفتوح */
-function setAllowedUsers(list){
-  guard_();
-  if(!isAdmin_()) throw Error('هذا الإجراء لمدير النظام (مالك ملف الجدول) فقط');
-  const emails = String(list||'').split(/[,;\s]+/).map(x=>x.trim().toLowerCase()).filter(Boolean);
-  const bad = emails.filter(e=>!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e));
-  if(bad.length) throw Error('بريد إلكتروني غير صحيح: ' + bad.join('، '));
-  const uniq = emails.filter((e,i)=>emails.indexOf(e)===i);
-  props_().setProperty('ALLOWED_USERS', uniq.join(','));
-  locked_(()=>log_('تعديل صلاحيات الدخول', uniq.length ? 'عدد المصرح لهم: '+uniq.length : 'القائمة فارغة — النظام مفتوح'));
-  return accessInfo_();
+function checkPassword_(pw){
+  if(typeof pw!=='string' || pw.length<8 || pw.length>100) throw Error('كلمة المرور يجب ألا تقل عن 8 أحرف');
+  return pw;
+}
+function hash_(password, salt){
+  const saltBytes = Utilities.newBlob(salt).getBytes();
+  let b = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt + '|' + password, Utilities.Charset.UTF_8);
+  for(let i=0;i<HASH_ROUNDS;i++) b = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, b.concat(saltBytes));
+  return Utilities.base64Encode(b);
+}
+function newUser_(username, password, role){
+  const salt = id_();
+  return {username:username, salt:salt, hash:hash_(password, salt), role:role, active:true, ver:1, created:today_()};
+}
+function setPassword_(u, password){ u.salt = id_(); u.hash = hash_(password, u.salt); u.ver = (Number(u.ver)||1) + 1; }
+function cache_(){ return CacheService.getScriptCache(); }
+function openSession_(u){
+  const token = (id_() + id_()).replace(/-/g,'');
+  cache_().put('SESS_'+token, JSON.stringify({u:u.username, v:u.ver}), SESSION_SECONDS);
+  return token;
+}
+/** يتحقق من رمز الجلسة ويعيد المستخدم، ويمدّ صلاحية الجلسة */
+function session_(token){
+  const expired = 'انتهت الجلسة؛ سجّل الدخول من جديد';
+  if(!token || typeof token!=='string' || token.length>100) throw Error(expired);
+  const raw = cache_().get('SESS_'+token);
+  if(!raw) throw Error(expired);
+  let s; try{ s = JSON.parse(raw); }catch(e){ throw Error(expired); }
+  const u = getUser_(s.u);
+  if(!u || u.active===false || u.ver!==s.v){ cache_().remove('SESS_'+token); throw Error(expired); }
+  cache_().put('SESS_'+token, raw, SESSION_SECONDS);
+  return {username:u.username, role:u.role, token:token};
+}
+
+/** حالة النظام لشاشة الدخول (لا تتطلب جلسة) */
+function authState(){
+  const has = allUsers_().length>0;
+  return {hasUsers:has, canSetup:!has && isOwner_(), company:companySettings_().name};
+}
+/** إنشاء حساب المدير الأول — مرة واحدة فقط، ومن حساب Google المالك لملف الجدول */
+function setupAdmin(username, password){
+  const name = checkUsername_(username); checkPassword_(password);
+  return locked_(()=>{
+    if(allUsers_().length) throw Error('تم إعداد حساب المدير من قبل؛ استخدم شاشة الدخول');
+    if(!isOwner_()) throw Error('إنشاء حساب المدير الأول يتم فقط من حساب Google المالك لملف الجدول');
+    const u = newUser_(name, password, 'admin');
+    putUser_(u);
+    CURRENT_ = {username:u.username, role:u.role};
+    log_('إنشاء حساب المدير', u.username);
+    return {token:openSession_(u), user:{username:u.username, role:u.role}};
+  });
+}
+function login(username, password){
+  const bad = 'اسم المستخدم أو كلمة المرور غير صحيحة';
+  const name = clean_(username).toLowerCase();
+  if(!name || typeof password!=='string' || !password || name.length>40 || password.length>100) throw Error(bad);
+  const failKey = 'FAIL_'+name, fails = Number(cache_().get(failKey))||0;
+  if(fails>=MAX_FAILS) throw Error('تم إيقاف الدخول مؤقتاً بعد محاولات خاطئة متكررة؛ حاول بعد 15 دقيقة');
+  const u = getUser_(name);
+  if(!u || u.active===false || hash_(password, u.salt)!==u.hash){
+    cache_().put(failKey, String(fails+1), LOCK_SECONDS);
+    throw Error(bad);
+  }
+  cache_().remove(failKey);
+  u.lastLogin = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy HH:mm');
+  putUser_(u);
+  return {token:openSession_(u), user:{username:u.username, role:u.role}};
+}
+function logout(token){
+  if(token && typeof token==='string' && token.length<=100) cache_().remove('SESS_'+token);
+  return true;
+}
+/** المدخل الوحيد لدوال البيانات من المتصفح */
+function rpc(token, name, args){
+  CURRENT_ = session_(token);
+  if(typeof name!=='string' || !Object.prototype.hasOwnProperty.call(API_, name)) throw Error('عملية غير معروفة');
+  return API_[name].apply(null, Array.isArray(args) ? args : []);
+}
+
+/* ----------------------------- إدارة المستخدمين ---------------------------- */
+function listUsers(){ adminOnly_(); return allUsers_().map(publicUser_); }
+/** إضافة أو تعديل مستخدم: {username, password, role, active, isNew} — كلمة المرور اختيارية عند التعديل */
+function saveUser(d){
+  adminOnly_(); obj_(d);
+  const name = checkUsername_(d.username);
+  const role = ROLES.indexOf(d.role)>=0 ? d.role : 'user';
+  const hasPw = !blank_(d.password);
+  if(hasPw) checkPassword_(d.password);
+  return locked_(()=>{
+    const all = allUsers_(), old = getUser_(name);
+    let u;
+    if(d.isNew===true){
+      if(old) throw Error('اسم المستخدم موجود بالفعل');
+      if(!hasPw) throw Error('أدخل كلمة مرور للمستخدم الجديد');
+      u = newUser_(name, d.password, role);
+    }else{
+      if(!old) throw Error('المستخدم غير موجود');
+      u = old;
+      const active = d.active!==false;
+      const others = all.filter(x=>userKey_(x.username)!==userKey_(name));
+      if((role!=='admin' || !active) && activeAdmins_(others)===0) throw Error('يجب أن يبقى مدير واحد مفعّل على الأقل');
+      if(u.role!==role || (u.active!==false)!==active) u.ver = (Number(u.ver)||1) + 1;
+      u.role = role; u.active = active;
+      if(hasPw) setPassword_(u, d.password);
+    }
+    putUser_(u);
+    log_(d.isNew===true?'إضافة مستخدم':'تعديل مستخدم', u.username);
+    return allUsers_().map(publicUser_);
+  });
+}
+function deleteUser(username){
+  adminOnly_(); check_(username);
+  return locked_(()=>{
+    const u = getUser_(username);
+    if(!u) throw Error('المستخدم غير موجود');
+    if(userKey_(u.username)===userKey_(CURRENT_.username)) throw Error('لا يمكنك حذف حسابك الحالي');
+    props_().deleteProperty(userKey_(username));
+    log_('حذف مستخدم', u.username);
+    return allUsers_().map(publicUser_);
+  });
+}
+function changeMyPassword(oldPassword, newPassword){
+  guard_(); checkPassword_(newPassword);
+  return locked_(()=>{
+    const u = getUser_(CURRENT_.username);
+    if(!u || typeof oldPassword!=='string' || hash_(oldPassword, u.salt)!==u.hash) throw Error('كلمة المرور الحالية غير صحيحة');
+    setPassword_(u, newPassword);
+    putUser_(u);
+    cache_().remove('SESS_'+CURRENT_.token);          // إنهاء كل الجلسات القديمة وفتح جلسة جديدة
+    log_('تغيير كلمة المرور', u.username);
+    return {token:openSession_(u)};
+  });
 }
 
 /* --------------------------- الإعداد وواجهة الويب -------------------------- */
 function setup(){
-  guard_();
   const ss = db_();
   Object.keys(S).forEach(key=>{
     const name = S[key];
@@ -146,14 +277,6 @@ function setup(){
   return 'تم التحقق من أوراق النظام دون حذف البيانات';
 }
 function doGet(){
-  try{ guard_(); }
-  catch(e){
-    const msg = String(e.message||e).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    return HtmlService.createHtmlOutput(
-      '<div dir="rtl" style="font-family:Tahoma,Arial;max-width:520px;margin:80px auto;padding:30px;border:1px solid #dde5f0;border-radius:14px;text-align:center;color:#172c4c">'+
-      '<h2 style="color:#b3372f">غير مصرح بالدخول</h2><p style="line-height:1.9">'+msg+'</p></div>'
-    ).setTitle(APP_TITLE);
-  }
   return HtmlService.createHtmlOutputFromFile('Index')
     .setTitle(APP_TITLE)
     .addMetaTag('viewport','width=device-width, initial-scale=1');
@@ -167,7 +290,7 @@ function bootstrap(){
     settings: companySettings_(),
     defaults: defaultRates_(),
     stats: projectsOverview_(),
-    access: accessInfo_()
+    user: {username:CURRENT_.username, role:CURRENT_.role}
   };
 }
 
@@ -508,7 +631,7 @@ function companySettings_(){
 function companySettings(){ guard_(); return companySettings_(); }
 /** يقبل معرّف الملف أو رابط Drive كاملاً. ترك الحقل فارغاً يلغي الختم المسجل */
 function setCompanyDetails(address,phone,stampFileId,name){
-  guard_();
+  adminOnly_();
   const props=props_();
   const raw=clean_(stampFileId);
   if(raw){
@@ -536,7 +659,7 @@ function defaultRates_(){
 }
 function defaultRates(){ guard_(); return defaultRates_(); }
 function setDefaultRates(o,p,t){
-  guard_();
+  adminOnly_();
   const props=props_();
   const vals=[number_(o||0), number_(p||0), number_(t||0)];
   props.setProperty('DEFAULT_OVERHEAD', String(vals[0]));
@@ -581,10 +704,9 @@ function createBOQ(projectId){
   locked_(()=>log_('إصدار جدول كميات', pr.name));
   return ss.getUrl();
 }
-/** اختياري: استدعِ هذه الدالة من المحرر بعد إنشاء مجلد مخصص في Drive */
+/** اختياري (للمدير): تحديد مجلد Drive الذي تُحفظ فيه جداول الكميات */
 function setOutputFolder(folderId){
-  guard_();
-  if(!isAdmin_()) throw Error('هذا الإجراء لمدير النظام فقط');
+  adminOnly_();
   DriveApp.getFolderById(folderId);
   props_().setProperty('BOQ_FOLDER_ID', folderId);
   return true;
@@ -619,8 +741,21 @@ function costReportData(projectId){
 
 /* ------------------------------- اختبارات ---------------------------------- */
 function testProjectsRead(){
-  guard_();
   const data=projects_();
   console.log('عدد المشروعات المقروءة: '+data.length);
   console.log(JSON.stringify(data.map(p=>({id:p.id, name:p.name}))));
 }
+
+/* --------------------- الدوال المتاحة للمتصفح عبر rpc ---------------------- */
+const API_ = {
+  bootstrap:bootstrap, catalog:catalog, catalogAll:catalogAll, saveCatalogItem:saveCatalogItem,
+  setCatalogActive:setCatalogActive, updateCatalogPrice:updateCatalogPrice,
+  projects:projects, saveProject:saveProject, setProjectStatus:setProjectStatus,
+  deleteProject:deleteProject, duplicateProject:duplicateProject,
+  lines:lines, saveLine:saveLine, removeLine:removeLine, duplicateLine:duplicateLine,
+  projectSummary:projectSummary, projectsOverview:projectsOverview, getLog:getLog,
+  companySettings:companySettings, setCompanyDetails:setCompanyDetails,
+  defaultRates:defaultRates, setDefaultRates:setDefaultRates,
+  createBOQ:createBOQ, setOutputFolder:setOutputFolder, quoteData:quoteData, costReportData:costReportData,
+  listUsers:listUsers, saveUser:saveUser, deleteUser:deleteUser, changeMyPassword:changeMyPassword
+};
