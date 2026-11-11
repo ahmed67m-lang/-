@@ -107,7 +107,7 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
 .badge.محصلة{background:var(--green-bg);color:var(--green)}
 .badge.مستحقة{background:var(--amber-bg);color:var(--amber)}
 .badge.cat{background:var(--blue-bg);color:#1f4d8c}
-/* ---------- بطاقات أيقونية (v3.7) ---------- */
+/* ---------- بطاقات أيقونية (v3.8) ---------- */
 .kpi:nth-child(1){border-top:4px solid #2f6fb5}.kpi:nth-child(2){border-top:4px solid #1e8a5a}.kpi:nth-child(3){border-top:4px solid #7b4fc9}.kpi:nth-child(4){border-top:4px solid #e07a1f}.kpi:nth-child(5){border-top:4px solid #c0392b}.kpi:nth-child(6){border-top:4px solid #12877f}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-top:12px}
 .cards.sm{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
@@ -211,15 +211,15 @@ tr.late td{background:#fff3f2}
 .picker-trigger{width:100%;background:#fff;border:1px solid #c9d5e4;border-radius:9px;padding:10px 12px;text-align:right;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;font-weight:600;cursor:pointer;line-height:1.6;color:var(--ink)}
 .picker-trigger:hover{border-color:var(--navy3)}
 .picker-trigger .chosen{flex:1;min-width:0;white-space:pre-line;overflow-wrap:anywhere;max-height:260px;overflow-y:auto}
-.picker-menu{max-height:420px!important;right:0;left:auto;width:62%}
-.picker-tip{position:absolute;top:calc(100% + 4px);left:0;width:calc(38% - 10px);max-height:420px;overflow-y:auto;z-index:61;background:#fff3cf;border:2px solid #e0b43f;border-radius:12px;padding:13px 14px;box-shadow:0 12px 30px rgba(120,86,0,.22);font-size:12.5px;line-height:1.85;color:#4a3a08;white-space:pre-line;overflow-wrap:anywhere}
+.picker-menu{max-height:420px!important;right:0;left:0;width:100%}
+.picker-tip{pointer-events:none;position:absolute;top:calc(100% + 4px);left:8px;width:min(440px,46%);max-height:380px;overflow-y:auto;z-index:61;background:#fff3cf;border:2px solid #e0b43f;border-radius:12px;padding:13px 14px;box-shadow:0 12px 30px rgba(120,86,0,.22);font-size:12.5px;line-height:1.85;color:#4a3a08;white-space:pre-line;overflow-wrap:anywhere}
 .picker-tip h4{margin:0 0 3px;font-size:12px;color:#8a6200;font-weight:800}
 .picker-tip .tip-sec{margin-bottom:10px}
 .picker-tip .tip-meta{display:flex;gap:8px;flex-wrap:wrap;white-space:normal}
 .picker-tip .tip-meta span{background:#fff;border:1px solid #e3c870;border-radius:8px;padding:2px 9px;font-weight:700}
 .picker-tip .tip-none{color:#8a7a45;font-style:italic}
 .picker-opt:hover,.picker-opt:focus{background:#fff3cf!important;outline:none}
-@media(max-width:900px){.picker-menu{width:100%}.picker-tip{position:fixed;left:10px;right:10px;bottom:10px;top:auto;width:auto;max-height:38vh}}
+@media(max-width:900px){.picker-tip{position:fixed;left:10px;right:10px;bottom:10px;top:auto;width:auto;max-height:38vh}}
 #itemDesc{white-space:pre-line;overflow-wrap:anywhere}
 .picker-menu{position:absolute;top:calc(100% + 4px);right:0;left:0;z-index:60;max-height:330px;overflow-y:auto;background:#fff;border:1px solid #b7c9df;border-radius:10px;box-shadow:0 12px 30px rgba(20,45,75,.18);padding:4px}
 .picker-opt{display:block;width:100%;text-align:right;background:#fff;color:var(--ink);border:0;border-bottom:1px solid #eef2f7;border-radius:6px;padding:9px 10px;font-size:12.5px;line-height:1.65;white-space:pre-line;overflow-wrap:anywhere;cursor:pointer}
@@ -365,7 +365,7 @@ tr.late td{background:#fff3f2}
     <div class="side-brand">
       <div class="logo">🏗️</div>
       <h1>منارات المتحدة</h1>
-      <div class="sub">نظام المقايسات والتسعير v3.7</div>
+      <div class="sub">نظام المقايسات والتسعير v3.8</div>
     </div>
     <nav class="side-nav" id="sideNav">
       <button class="nav-item active" data-view="home"><span class="ic">🏠</span><span class="nav-label">الرئيسية</span></button>
@@ -435,6 +435,13 @@ tr.late td{background:#fff3f2}
           <div class="card">
             <h3 class="card-title"><span class="dot"></span>ملخص المقايسة الحالية <span id="pricingProjName" class="muted" style="font-weight:600"></span></h3>
             <div class="chips" id="prjChips"></div>
+            <div class="toolbar">
+              <button class="btn gold" onclick="previewQuote()">👁 معاينة المقايسة</button>
+              <button class="btn" onclick="printQuote()">🖨️ طباعة</button>
+              <button class="btn secondary" onclick="printQuote('pdf')">📄 تنزيل PDF</button>
+              <button class="btn secondary" onclick="downloadQuoteWord()">📝 تنزيل Word</button>
+              <span class="muted" style="font-size:12px">تفتح المعاينة كمستند قابل للتعديل قبل الطباعة أو الحفظ</span>
+            </div>
           </div>
 
           <div class="card">
@@ -647,7 +654,9 @@ tr.late td{background:#fff3f2}
           <div id="previewBar">
             <button class="btn secondary sm" onclick="goBack()">↩ رجوع</button>
             <button class="btn sm" id="btnEditPreview" onclick="toggleEditPreview()">✏️ تعديل المحتوى</button>
-            <button class="btn gold sm" onclick="window.print()">🖨 طباعة / حفظ PDF</button>
+            <button class="btn gold sm" onclick="window.print()">🖨 طباعة</button>
+            <button class="btn sm" onclick="downloadPdf()">📄 تنزيل PDF</button>
+            <button class="btn secondary sm" onclick="downloadWord()">📝 تنزيل Word</button>
             <span class="note">فعّل «تعديل المحتوى» ثم اضغط على أي نص داخل المستند لتعديله قبل الطباعة — التعديل على المعاينة فقط ولا يغيّر بيانات النظام</span>
           </div>
           <div id="previewDoc" contenteditable="false"></div>
@@ -1214,7 +1223,7 @@ function openSub(s){
   renderItems();
 }
 function backSubs(){ if(state.chapter) openChapter(state.chapter); }
-function showTip(x){
+function showTip(x,el){
   const sec=(t,v)=>'<div class="tip-sec"><h4>'+t+'</h4>'+v+'</div>';
   const none='<span class="tip-none">لم تُسجَّل بعد</span>';
   $('pickerTip').innerHTML=
@@ -1222,7 +1231,14 @@ function showTip(x){
     sec('🔎 التفاصيل / المواصفات',x.detail?esc(x.detail):none)+
     sec('🛠️ طريقة التنفيذ',x.method?esc(x.method):none)+
     '<div class="tip-meta"><span>الوحدة: '+esc(x.unit||'—')+'</span><span>السعر الاسترشادي: '+fmt(x.price)+' د.ك</span><span>'+esc(x.sub)+'</span></div>';
-  $('pickerTip').classList.remove('hidden');
+  const tip=$('pickerTip'); tip.classList.remove('hidden');
+  if(el&&window.innerWidth>900){
+    const pr=$('itemPicker').getBoundingClientRect(), mr=$('pickerMenu').getBoundingClientRect(), rr=el.getBoundingClientRect();
+    const th=tip.offsetHeight;
+    let top=rr.top-pr.top+rr.height/2-th/2;
+    top=Math.max(mr.top-pr.top, Math.min(top, mr.bottom-pr.top-th));
+    tip.style.top=top+'px';
+  }
 }
 function hideTip(){ const t=$('pickerTip'); if(t) t.classList.add('hidden'); }
 document.addEventListener('mouseleave',hideTip);
@@ -1249,7 +1265,7 @@ function renderItems(){
     b.type='button'; b.className='picker-opt'; b.dataset.itemId=x.id; b.setAttribute('role','option');
     b.textContent=x.code+' — '+x.description+(x.detail?'\n↳ '+x.detail:'');
     b.addEventListener('click',()=>{ pickItem(x.id); });
-    b.addEventListener('mouseenter',()=>showTip(x)); b.addEventListener('focus',()=>showTip(x));
+    b.addEventListener('mouseenter',()=>showTip(x,b)); b.addEventListener('focus',()=>showTip(x,b));
     menu.appendChild(b);
   });
   $('pickerLabel').textContent='اختر البند...';
@@ -1706,7 +1722,7 @@ async function previewStatement(){
   try{
     const a=state.accounts||await loadAccounts();
     if(!state.settings||!state.settings.name){ try{ state.settings=await api('companySettings'); }catch(e){} }
-    openPreview(buildStatementDoc(a));
+    openPreview(buildStatementDoc(a),false,'كشف-حساب-'+(a.project.client||''));
   }catch(e){ toast(e.message,'err'); }
 }
 function exportStatementCsv(){
@@ -1908,7 +1924,8 @@ function buildCostDoc(d){
     '<div class="pd-foot"><div><b>إعداد</b><div class="pd-sign">المهندس المسؤول</div></div><div><b>اعتماد</b><div class="pd-sign">الإدارة</div></div></div>';
 }
 /* --------------------- فتح المعاينة وتفعيل التعديل ------------------------- */
-function openPreview(html,landscape){
+function openPreview(html,landscape,title){
+  state.previewTitle=title||'مستند';
   const el=$('previewDoc');
   el.innerHTML=html;
   el.setAttribute('contenteditable','false');
@@ -1925,19 +1942,46 @@ function toggleEditPreview(){
   $('btnEditPreview').innerHTML=on?'✏️ تعديل المحتوى':'✔ إيقاف التعديل';
   if(!on){ el.focus(); toast('وضع التعديل مفعّل — اضغط على أي نص داخل المستند لتغييره'); }
 }
+function safeName(t){ return String(t||'مستند').replace(/[\\/:*?"<>|]+/g,' ').trim().slice(0,80)||'مستند'; }
+function downloadPdf(){
+  const old=document.title; document.title=safeName(state.previewTitle);
+  toast('في نافذة الطباعة اختر الطابعة «حفظ كـ PDF» ثم اضغط حفظ','ok');
+  setTimeout(()=>{ window.print(); setTimeout(()=>{document.title=old;},1500); },400);
+}
+function downloadWord(){
+  const el=$('previewDoc'); if(!el||!el.innerHTML.trim()){ toast('لا يوجد مستند','err'); return; }
+  const land=el.classList.contains('landscape');
+  const html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" dir="rtl"><head><meta charset="utf-8"><title>'+esc(state.previewTitle||'')+'</title>'+
+    '<style>@page{size:A4'+(land?' landscape':'')+';margin:1.5cm}body{font-family:Arial,"Sakkal Majalla",sans-serif;direction:rtl;text-align:right;font-size:12pt}'+
+    'table{border-collapse:collapse;width:100%}th,td{border:1px solid #888;padding:4px 6px;font-size:10.5pt}th{background:#e8eef7}h1{font-size:18pt;text-align:center}'+
+    '.pd-head{width:100%;border-bottom:2px solid #153d6c;margin-bottom:8px}.pd-brand{font-size:16pt;font-weight:bold;color:#153d6c}</style></head><body dir="rtl">'+el.innerHTML+'</body></html>';
+  const blob=new Blob(['\ufeff',html],{type:'application/msword'});
+  const u=URL.createObjectURL(blob), a=document.createElement('a');
+  a.href=u; a.download=safeName(state.previewTitle)+'.doc'; document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(u);a.remove();},500);
+  toast('تم تنزيل ملف Word قابل للتعديل','ok');
+}
+async function printQuote(mode){
+  const ok=await previewQuote();
+  if(ok) setTimeout(()=>{ mode==='pdf'?downloadPdf():window.print(); },700);
+}
+async function downloadQuoteWord(){
+  const ok=await previewQuote();
+  if(ok) setTimeout(downloadWord,500);
+}
 async function previewQuote(){
   if(!state.projectId){ toast('اختر مشروعاً أولاً','err'); return; }
   const approved=await confirmDialog('هل هذه المقايسة معتمدة للإرسال باسم الشركة من الشخص المفوض؟<br>اختر «نسخة معتمدة» لإظهار الختم المسجل، أو «مسودة» لعرضها بدون اعتماد.','نسخة معتمدة',false,'مسودة غير معتمدة');
   try{
     const d=await api('quoteData',state.projectId);
-    openPreview(buildQuoteDoc(d,approved));
+    openPreview(buildQuoteDoc(d,approved),false,'مقايسة-'+(d.project.name||'')); return true;
   }catch(e){ toast(e.message,'err'); }
 }
 async function previewCost(){
   if(!state.projectId){ toast('اختر مشروعاً أولاً','err'); return; }
   try{
     const d=await api('costReportData',state.projectId);
-    openPreview(buildCostDoc(d),true);
+    openPreview(buildCostDoc(d),true,'تقرير-تكلفة-'+(d.project.name||''));
   }catch(e){ toast(e.message,'err'); }
 }
 function exportBOQ(){
