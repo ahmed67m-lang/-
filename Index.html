@@ -107,10 +107,44 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
 .badge.محصلة{background:var(--green-bg);color:var(--green)}
 .badge.مستحقة{background:var(--amber-bg);color:var(--amber)}
 .badge.cat{background:var(--blue-bg);color:#1f4d8c}
-.chip.click{cursor:pointer;transition:transform .12s,box-shadow .12s;position:relative}
-.chip.click:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(18,52,94,.16)}
+/* ---------- بطاقات أيقونية (v3.7) ---------- */
+.kpi:nth-child(1){border-top:4px solid #2f6fb5}.kpi:nth-child(2){border-top:4px solid #1e8a5a}.kpi:nth-child(3){border-top:4px solid #7b4fc9}.kpi:nth-child(4){border-top:4px solid #e07a1f}.kpi:nth-child(5){border-top:4px solid #c0392b}.kpi:nth-child(6){border-top:4px solid #12877f}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-top:12px}
+.cards.sm{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.mcard{--c:#2f6fb5;background:#fff;border:1px solid var(--line);border-top:4px solid var(--c);border-radius:16px;padding:15px;box-shadow:var(--shadow);transition:transform .16s,box-shadow .16s;position:relative;display:flex;flex-direction:column;gap:10px}
+.mcard.click{cursor:pointer}
+.mcard.click:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(20,45,75,.16)}
+.mc-top{display:flex;gap:12px;align-items:center}
+.mc-ic{width:50px;height:50px;border-radius:15px;background:var(--c);color:#fff;font-size:25px;display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 5px 12px rgba(20,45,75,.22)}
+.mc-t{font-weight:800;color:var(--navy);font-size:14.5px;line-height:1.5;word-break:break-word}
+.mc-s{color:var(--muted);font-size:12px;margin-top:2px}
+.mc-amt{font-weight:800;font-size:17px;direction:ltr;text-align:right;color:var(--c);font-variant-numeric:tabular-nums}
+.mc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.mc-stat{background:color-mix(in srgb,var(--c) 10%,#fff);border-radius:10px;padding:7px 4px;text-align:center}
+.mc-stat b{display:block;font-size:12.5px;direction:ltr;color:var(--navy)}
+.mc-stat small{font-size:10.5px;color:var(--muted)}
+.mc-tags{display:flex;gap:6px;flex-wrap:wrap}
+.mc-tag{background:color-mix(in srgb,var(--c) 10%,#fff);border-radius:20px;padding:3px 10px;font-size:11.5px;color:var(--navy2);font-weight:600}
+.mc-act{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
+.mc-bar{height:7px;background:#e8edf5;border-radius:8px;overflow:hidden}
+.mc-bar i{display:block;height:100%;background:var(--c);border-radius:8px}
+.mc-desc{font-size:12.5px;color:#30445f;line-height:1.7;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.mcard.off{opacity:.55}
+.mcard.empty-card{grid-column:1/-1;text-align:center;border-top-color:var(--line);color:var(--muted);cursor:default}
+.pd-hero{display:flex;gap:16px;align-items:center;margin-bottom:14px}
+.pd-hero .mc-ic{width:70px;height:70px;font-size:36px;border-radius:20px}
+.act-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.act-tile{--c:#2f6fb5;border:1px solid color-mix(in srgb,var(--c) 30%,#fff);background:color-mix(in srgb,var(--c) 9%,#fff);border-radius:14px;padding:14px 6px;text-align:center;cursor:pointer;font-family:inherit;font-weight:800;color:var(--navy);font-size:13px;transition:transform .14s,box-shadow .14s}
+.act-tile:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(20,45,75,.15)}
+.act-tile span{display:flex;width:46px;height:46px;border-radius:14px;background:var(--c);color:#fff;font-size:23px;align-items:center;justify-content:center;margin:0 auto 8px}
+.chip.click{--c:#2f6fb5;cursor:pointer;transition:transform .12s,box-shadow .12s;position:relative;display:flex;align-items:center;gap:11px;background:color-mix(in srgb,var(--c) 11%,#fff);border:1px solid color-mix(in srgb,var(--c) 35%,#fff);border-top:4px solid var(--c);padding:11px 12px}
+.chip.click:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(18,52,94,.18)}
+.chip.click .c-ic{width:42px;height:42px;border-radius:13px;background:var(--c);color:#fff;font-size:21px;display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 4px 10px rgba(20,45,75,.2)}
+.chip.click .c-value{color:var(--c)}
+.chip.click.hero{background:linear-gradient(120deg,#12345e,#1f4d8c);border-color:#12345e}
+.chip.click.hero .c-value{color:#fff}
+.chip.click.hero .c-ic{background:rgba(255,255,255,.18)}
 .chip.click.sel{outline:3px solid var(--gold,#c9a24b);outline-offset:1px}
-.chip.click .c-more{position:absolute;left:8px;top:6px;font-size:11px;opacity:.55}
 .acc-detail{background:#fffdf6;border:1px solid #e6d9b0;border-radius:12px;padding:14px 16px;margin:4px 0 14px}
 .acc-detail h4{margin:0 0 10px;font-size:15px;color:var(--navy);display:flex;justify-content:space-between;align-items:center;gap:10px}
 .acc-alert{border-radius:10px;padding:10px 14px;margin:0 0 12px;font-weight:700;font-size:13px}
@@ -331,7 +365,7 @@ tr.late td{background:#fff3f2}
     <div class="side-brand">
       <div class="logo">🏗️</div>
       <h1>منارات المتحدة</h1>
-      <div class="sub">نظام المقايسات والتسعير v3.6</div>
+      <div class="sub">نظام المقايسات والتسعير v3.7</div>
     </div>
     <nav class="side-nav" id="sideNav">
       <button class="nav-item active" data-view="home"><span class="ic">🏠</span><span class="nav-label">الرئيسية</span></button>
@@ -373,7 +407,7 @@ tr.late td{background:#fff3f2}
         </div>
         <div class="card">
           <h3 class="card-title"><span class="dot"></span>أحدث المشروعات</h3>
-          <div class="table-wrap"><table><thead><tr><th>المشروع</th><th>العميل</th><th>الحالة</th><th>عدد البنود</th><th>القيمة الإجمالية (د.ك)</th><th></th></tr></thead><tbody id="recentTbody"></tbody></table></div>
+          <div class="cards sm" id="recentGrid"></div>
         </div>
       </section>
 
@@ -385,7 +419,7 @@ tr.late td{background:#fff3f2}
             <select id="projStatusFilter" style="max-width:170px" onchange="renderProjectsTable()"><option value="">كل الحالات</option></select>
             <button class="btn" onclick="openProjectModal()">✚ مشروع جديد</button>
           </div>
-          <div class="table-wrap"><table><thead><tr><th>م</th><th>اسم المشروع</th><th>العميل</th><th>الحالة</th><th>النسب (م/ر/ض)</th><th>البنود</th><th>قيمة البيع (د.ك)</th><th>التكلفة (د.ك)</th><th>إجراءات</th></tr></thead><tbody id="projectsTbody"></tbody></table></div>
+          <div class="cards" id="projectsGrid"></div>
         </div>
       </section>
 
@@ -498,7 +532,7 @@ tr.late td{background:#fff3f2}
           <div class="card" id="cardSchedule">
             <h3 class="card-title"><span class="dot"></span>📅 بيان الدفعات المستحقة والمتأخرة</h3>
             <div class="acc-cats" id="schedChips"></div>
-            <div class="table-wrap"><table><thead><tr><th>تاريخ الاستحقاق</th><th>البيان</th><th>المبلغ (د.ك)</th><th>المسدد (د.ك)</th><th>المتبقي (د.ك)</th><th>الحالة</th></tr></thead><tbody id="schedTbody"></tbody></table></div>
+            <div class="cards sm" id="schedGrid"></div>
           </div>
 
           <div class="card" id="cardStatement">
@@ -521,7 +555,7 @@ tr.late td{background:#fff3f2}
               </div>
               <div class="muted" style="font-size:11.5px;margin-top:8px">PDF أو صورة — بحد أقصى 10 ميجابايت — تُحفظ في مجلد خاص على Google Drive</div>
             </div>
-            <div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>اسم الملف</th><th>تاريخ الرفع</th><th>رفع بواسطة</th><th>إجراءات</th></tr></thead><tbody id="contractsTbody"></tbody></table></div>
+            <div class="cards sm" id="contractsGrid"></div>
           </div>
 
           <div class="card">
@@ -538,7 +572,7 @@ tr.late td{background:#fff3f2}
               <div><button class="btn" id="btnAddPay" onclick="addPaymentUI()" style="width:100%;justify-content:center">＋ إضافة دفعة</button></div>
             </div>
             <div class="acc-cats" id="payChips"></div>
-            <div class="table-wrap"><table><thead><tr><th>التاريخ</th><th>النوع</th><th>البيان</th><th>الاستحقاق</th><th>المبلغ (د.ك)</th><th>السند / الطريقة</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody id="paymentsTbody"></tbody></table></div>
+            <div class="cards sm" id="paymentsGrid"></div>
           </div>
 
           <div class="card">
@@ -551,7 +585,7 @@ tr.late td{background:#fff3f2}
               <div><button class="btn" id="btnAddExp" onclick="addExpenseUI()" style="width:100%;justify-content:center">＋ إضافة مصروف</button></div>
             </div>
             <div class="acc-cats" id="expCatChips"></div>
-            <div class="table-wrap"><table><thead><tr><th>التاريخ</th><th>الفئة</th><th>البيان</th><th>المبلغ (د.ك)</th><th>طريقة الصرف</th><th>إجراءات</th></tr></thead><tbody id="expensesTbody"></tbody></table></div>
+            <div class="cards sm" id="expensesGrid"></div>
           </div>
         </div>
       </section>
@@ -571,7 +605,7 @@ tr.late td{background:#fff3f2}
               <button class="btn" onclick="openItemModal()">✚ بند جديد</button>
               <span class="muted" id="catCount" style="font-size:12px"></span>
             </div>
-            <div class="table-wrap"><table><thead><tr><th>رقم البند</th><th>الباب</th><th>التصنيف الفرعي</th><th>الوصف</th><th>الوحدة</th><th>السعر الاسترشادي</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="catalogTbody"></tbody></table></div>
+            <div class="cards sm" id="catalogGrid"></div>
           </div>
         </div>
       </section>
@@ -645,7 +679,7 @@ tr.late td{background:#fff3f2}
         <div class="card admin-only">
           <h3 class="card-title"><span class="dot"></span>المستخدمون وصلاحيات الدخول</h3>
           <p class="muted" style="font-size:12.5px;margin-top:-6px">المدير يدير المستخدمين وبيانات الشركة والنسب الافتراضية. المستخدم العادي يعمل على المشروعات والتسعير والتقارير. كلمات المرور لا تُحفظ كنص ولا يمكن عرضها؛ يمكن فقط تعيين كلمة جديدة.</p>
-          <div class="table-wrap"><table><thead><tr><th>اسم المستخدم</th><th>الصلاحية</th><th>الحالة</th><th>آخر دخول</th><th></th></tr></thead><tbody id="usersTbody"></tbody></table></div>
+          <div class="cards sm" id="usersGrid"></div>
           <div style="margin-top:14px"><button class="btn" onclick="userModal()">＋ مستخدم جديد</button></div>
         </div>
         <div class="card">
@@ -980,12 +1014,11 @@ function renderDashboard(){
   $('kpiRow').innerHTML=kpis.map(k=>'<div class="kpi '+k[3]+'"><div class="k-label">'+k[0]+'</div><div class="k-value">'+k[1]+'</div><div class="k-sub">'+k[2]+'</div></div>').join('');
 
   const rec=st?st.recent:[];
-  $('recentTbody').innerHTML=rec.length?rec.map(p=>
-    '<tr><td><b>'+esc(p.name)+'</b></td><td>'+esc(p.client)+'</td>'+
-    '<td><span class="badge '+esc(String(p.status).replace(/ /g,'-'))+'">'+esc(p.status)+'</span></td>'+
-    '<td class="num">'+p.count+'</td><td class="num">'+fmt(p.final)+'</td>'+
-    '<td><button class="btn sm secondary" onclick="openPricingFor('+jsArg(p.id)+')">فتح التسعير</button></td></tr>').join('')
-    :'<tr><td colspan="6" class="empty">لا توجد مشاريع بعد — أنشئ مشروعك الأول من شاشة المشروعات</td></tr>';
+  $('recentGrid').innerHTML=rec.length?rec.map(p=>{
+    const u=statusUi(p.status);
+    return '<div class="mcard click" style="--c:'+u[1]+'" onclick="projectDetail('+jsArg(p.id)+')"><div class="mc-top"><div class="mc-ic">'+u[0]+'</div><div><div class="mc-t">'+esc(p.name)+'</div><div class="mc-s">👤 '+esc(p.client||'')+'</div></div></div>'+
+      '<div class="mc-stats" style="grid-template-columns:repeat(2,1fr)"><div class="mc-stat"><b>'+p.count+'</b><small>بند</small></div><div class="mc-stat"><b>'+fmt(p.final)+'</b><small>القيمة د.ك</small></div></div></div>';
+  }).join(''):'<div class="mcard empty-card">لا توجد مشاريع بعد — أنشئ مشروعك الأول من شاشة المشروعات</div>';
 
   if(typeof Chart==='undefined'||!st) return;
   try{
@@ -1016,23 +1049,49 @@ function chaptersTop(entries){
 function projectStatsOf(id){
   return (state.stats&&state.stats.perProject.find(x=>x.id===id))||{count:0,sales:0,cost:0,final:0};
 }
+const STATUS_UI={'مسودة':['📝','#6b7a90'],'قيد التسعير':['🧮','#2f6fb5'],'معتمد':['✅','#1e8a5a'],
+  'قيد التنفيذ':['🏗️','#e07a1f'],'منفذ':['🏁','#5a4fcf'],'ملغي':['⛔','#c0392b']};
+function statusUi(st){ return STATUS_UI[st]||['📁','#2f6fb5']; }
 function renderProjectsTable(){
   const q=($('projSearch').value||'').toLowerCase(), sf=$('projStatusFilter').value;
   const arr=state.projects.filter(p=>(p.name+' '+p.client).toLowerCase().includes(q)&&(!sf||p.status===sf));
-  $('projectsTbody').innerHTML=arr.length?arr.map((p,i)=>{
-    const s=projectStatsOf(p.id);
-    return '<tr><td>'+(i+1)+'</td><td><b>'+esc(p.name)+'</b>'+(p.notes?'<div class="muted" style="font-size:11px">'+esc(p.notes)+'</div>':'')+'</td>'+
-      '<td>'+esc(p.client)+'</td>'+
-      '<td><span class="badge '+esc(String(p.status).replace(/ /g,'-'))+'">'+esc(p.status)+'</span></td>'+
-      '<td class="num" style="font-size:12px">'+fmtPct(p.overhead)+' / '+fmtPct(p.profit)+' / '+fmtPct(p.tax)+'</td>'+
-      '<td class="num">'+s.count+'</td><td class="num">'+fmt(s.sales)+'</td><td class="num">'+fmt(s.cost)+'</td>'+
-      '<td style="white-space:nowrap">'+
-      '<button class="btn sm" onclick="openPricingFor('+jsArg(p.id)+')">تسعير</button> '+
-      '<button class="btn sm gold" onclick="openAccountsFor('+jsArg(p.id)+')">حسابات</button> '+
-      '<button class="btn sm secondary" onclick="openProjectModal('+jsArg(p.id)+')">تعديل</button> '+
-      '<button class="btn sm secondary" onclick="dupProject('+jsArg(p.id)+',this)">نسخ</button> '+
-      '<button class="btn sm danger" onclick="delProject('+jsArg(p.id)+')">حذف</button></td></tr>';
-  }).join(''):'<tr><td colspan="9" class="empty">لا توجد مشاريع مطابقة</td></tr>';
+  $('projectsGrid').innerHTML=arr.length?arr.map(p=>{
+    const s=projectStatsOf(p.id), u=statusUi(p.status);
+    return '<div class="mcard click" style="--c:'+u[1]+'" onclick="projectDetail('+jsArg(p.id)+')">'+
+      '<div class="mc-top"><div class="mc-ic">'+u[0]+'</div><div><div class="mc-t">'+esc(p.name)+'</div><div class="mc-s">👤 '+esc(p.client||'بدون عميل')+'</div></div></div>'+
+      '<div class="mc-tags"><span class="mc-tag">'+esc(p.status)+'</span><span class="mc-tag">'+esc(p.date||'')+'</span></div>'+
+      '<div class="mc-stats"><div class="mc-stat"><b>'+s.count+'</b><small>بند</small></div>'+
+      '<div class="mc-stat"><b>'+fmt(s.final||s.sales)+'</b><small>القيمة د.ك</small></div>'+
+      '<div class="mc-stat"><b>'+fmt(s.cost)+'</b><small>التكلفة د.ك</small></div></div></div>';
+  }).join(''):'<div class="mcard empty-card">لا توجد مشاريع مطابقة — اضغط «مشروع جديد» لإضافة أول مشروع</div>';
+}
+function projectDetail(id){
+  const p=state.projects.find(x=>x.id===id); if(!p) return;
+  const s=projectStatsOf(id), u=statusUi(p.status);
+  const margin=s.net>0?((s.net-s.cost)/s.net*100):0;
+  const T=(c,ic,l,v)=>'<div class="mc-stat" style="--c:'+c+'"><b>'+v+'</b><small>'+ic+' '+l+'</small></div>';
+  const A=(c,ic,l,fn)=>'<button class="act-tile" style="--c:'+c+'" onclick="'+fn+'"><span>'+ic+'</span>'+l+'</button>';
+  openModal('تفاصيل المشروع',
+    '<div class="pd-hero" style="--c:'+u[1]+'"><div class="mc-ic">'+u[0]+'</div><div><div class="mc-t" style="font-size:18px">'+esc(p.name)+'</div>'+
+    '<div class="mc-s">👤 '+esc(p.client||'بدون عميل')+' &nbsp;•&nbsp; '+esc(p.date||'')+'</div>'+
+    '<div class="mc-tags" style="margin-top:6px"><span class="mc-tag">'+esc(p.status)+'</span></div></div></div>'+
+    '<div class="mc-stats" style="grid-template-columns:repeat(4,1fr)">'+
+    T('#2f6fb5','🧾','عدد البنود',s.count)+T('#1e8a5a','💰','القيمة النهائية',fmt(s.final)+' د.ك')+
+    T('#7b4fc9','🧮','التكلفة',fmt(s.cost)+' د.ك')+T('#e07a1f','📈','هامش الربح',fmtPct(margin)+'%')+'</div>'+
+    '<div class="mc-tags" style="margin-top:12px"><span class="mc-tag">مصاريف '+fmtPct(p.overhead)+'%</span><span class="mc-tag">ربح '+fmtPct(p.profit)+'%</span><span class="mc-tag">ضريبة '+fmtPct(p.tax)+'%</span></div>'+
+    (p.notes?'<div class="mc-desc" style="-webkit-line-clamp:unset;margin-top:10px">📝 '+esc(p.notes)+'</div>':'')+
+    '<div class="act-grid">'+
+    A('#2f6fb5','🧮','التسعير والمقايسة','closeModal();openPricingFor('+jsArg(id)+')')+
+    A('#c9a24b','💰','حسابات المشروع','closeModal();openAccountsFor('+jsArg(id)+')')+
+    A('#12877f','🖨️','التقارير والطباعة','closeModal();openReportsFor('+jsArg(id)+')')+
+    A('#6b7a90','✏️','تعديل البيانات','closeModal();openProjectModal('+jsArg(id)+')')+
+    A('#5a4fcf','📋','نسخ المشروع','dupProject('+jsArg(id)+',this)')+
+    A('#c0392b','🗑️','حذف','delProject('+jsArg(id)+')')+'</div>');
+  const m=document.querySelector('#modalRoot .modal'); if(m) m.style.maxWidth='780px';
+}
+function openReportsFor(id){
+  state.projectId=id; $('globalProject').value=id; state.accounts=null;
+  api('lines',id).then(ls=>{state.lines=ls; switchView('reports');}).catch(e=>{toast(e.message,'err'); switchView('reports');});
 }
 function openProjectModal(id){
   const p=id?state.projects.find(x=>x.id===id):null;
@@ -1423,14 +1482,15 @@ function renderCatalogTable(){
     (x.code+' '+x.description+' '+x.detail).toLowerCase().includes(q));
   const CAP=150;
   $('catCount').textContent='النتائج: '+arr.length+(arr.length>CAP?' — يُعرض أول '+CAP+' (ضيّق البحث)':'');
-  $('catalogTbody').innerHTML=arr.slice(0,CAP).map(x=>
-    '<tr style="'+(x.active?'':'opacity:.5')+'"><td><b>'+esc(x.code)+'</b></td><td>'+esc(x.chapter)+'</td><td>'+esc(x.sub)+'</td>'+
-    '<td>'+esc(x.description)+(x.detail?'<div class="muted" style="font-size:11px">'+esc(x.detail)+'</div>':'')+'</td>'+
-    '<td>'+esc(x.unit)+'</td><td class="num">'+fmt(x.price)+'</td>'+
-    '<td><span class="badge '+(x.active?'معتمد':'ملغي')+'">'+(x.active?'نشط':'موقوف')+'</span></td>'+
-    '<td style="white-space:nowrap"><button class="btn sm secondary" onclick="openItemModal('+jsArg(x.id)+')">تعديل</button> '+
-    '<button class="btn sm '+(x.active?'danger':'green')+'" onclick="toggleItemActive('+jsArg(x.id)+','+!x.active+')">'+(x.active?'إيقاف':'تفعيل')+'</button></td></tr>'
-  ).join('')||'<tr><td colspan="8" class="empty">لا توجد بنود مطابقة</td></tr>';
+  $('catalogGrid').innerHTML=arr.slice(0,CAP).map(x=>{
+    const ic=iconFor(x.sub||x.chapter);
+    return '<div class="mcard'+(x.active?'':' off')+'" style="--c:'+(x.active?'#2f6fb5':'#6b7a90')+'">'+
+    '<div class="mc-top"><div class="mc-ic" style="font-size:20px;width:46px;height:46px">'+ic+'</div><div><div class="mc-t" style="direction:ltr;text-align:right">'+esc(x.code)+'</div><div class="mc-s">'+esc(x.sub)+'</div></div></div>'+
+    '<div class="mc-desc">'+esc(x.description)+'</div>'+
+    '<div class="mc-tags"><span class="mc-tag">'+esc(x.unit||'—')+'</span><span class="mc-tag" style="direction:ltr">'+fmt(x.price)+' د.ك</span>'+(x.method?'<span class="mc-tag">🛠️ طريقة تنفيذ</span>':'')+'<span class="mc-tag">'+(x.active?'نشط':'موقوف')+'</span></div>'+
+    '<div class="mc-act"><button class="btn sm secondary" onclick="openItemModal('+jsArg(x.id)+')">✏️ تعديل</button> '+
+    '<button class="btn sm '+(x.active?'danger':'green')+'" onclick="toggleItemActive('+jsArg(x.id)+','+!x.active+')">'+(x.active?'إيقاف':'تفعيل')+'</button></div></div>';
+  }).join('')||'<div class="mcard empty-card">لا توجد بنود مطابقة</div>';
 }
 function openItemModal(id){
   const x=id?state.catalogAll.find(v=>v.id===id):null;
@@ -1498,16 +1558,16 @@ async function renderAccounts(){
 function drawAccChips(a){
     const acc=a.accounts;
     const T=[
-      ['contract','قيمة العقد (المقايسة النهائية)', fmt(acc.contractValue)+' د.ك',''],
-      ['cost','تكلفة التنفيذ التقديرية', fmt(a.summary.cost)+' د.ك',''],
-      ['spent','المصروفات الفعلية', fmt(a.expenses.total)+' د.ك', a.expenses.total>a.summary.cost?'red':''],
-      ['paid','المحصَّل من العميل', fmt(a.payments.paid)+' د.ك','green'],
-      ['due','دفعات مستحقة'+(a.overdue.count?' (منها متأخرة)':''), fmt(acc.dueBalance)+' د.ك', a.overdue.count?'red':(acc.dueBalance>0?'red':'')],
-      ['outstanding','المتبقي على العميل', fmt(acc.outstanding)+' د.ك','']
+      ['contract','📑','#2f6fb5','قيمة العقد (المقايسة النهائية)', fmt(acc.contractValue)+' د.ك'],
+      ['cost','🧮','#7b4fc9','تكلفة التنفيذ التقديرية', fmt(a.summary.cost)+' د.ك'],
+      ['spent','💸','#e07a1f','المصروفات الفعلية', fmt(a.expenses.total)+' د.ك'],
+      ['paid','✅','#1e8a5a','المحصَّل من العميل', fmt(a.payments.paid)+' د.ك'],
+      ['due',a.overdue.count?'⚠️':'⏰','#c0392b','دفعات مستحقة'+(a.overdue.count?' (منها متأخرة)':''), fmt(acc.dueBalance)+' د.ك'],
+      ['outstanding','📌','#12877f','المتبقي على العميل', fmt(acc.outstanding)+' د.ك']
     ];
     const sel=state.accTab||'';
-    $('accChips').innerHTML=T.map(c=>'<div class="chip click '+c[3]+(sel===c[0]?' sel':'')+'" role="button" tabindex="0" onclick="accShow('+jsArg(c[0])+')"><span class="c-more">⤢</span><span class="c-label">'+c[1]+'</span><span class="c-value">'+c[2]+'</span></div>').join('')+
-    '<div class="chip click hero'+(sel==='net'?' sel':'')+'" role="button" tabindex="0" onclick="accShow(\'net\')"><span class="c-more">⤢</span><span class="c-label">صافي الربح المتوقع</span><span class="c-value">'+fmt(acc.expectedNet)+' د.ك</span></div>';
+    $('accChips').innerHTML=T.map(c=>'<div class="chip click'+(sel===c[0]?' sel':'')+'" style="--c:'+c[2]+'" role="button" tabindex="0" onclick="accShow('+jsArg(c[0])+')"><span class="c-ic">'+c[1]+'</span><span><span class="c-label">'+c[3]+'</span><span class="c-value">'+c[4]+'</span></span></div>').join('')+
+    '<div class="chip click hero'+(sel==='net'?' sel':'')+'" role="button" tabindex="0" onclick="accShow(\'net\')"><span class="c-ic">📈</span><span><span class="c-label">صافي الربح المتوقع</span><span class="c-value">'+fmt(acc.expectedNet)+' د.ك</span></span></div>';
     $('accAlert').innerHTML=a.overdue.count
       ?'<div class="acc-alert bad">⚠ يوجد '+a.overdue.count+' دفعة متأخرة بإجمالي '+fmt(a.overdue.amount)+' د.ك — أقدمها متأخرة '+a.overdue.maxDays+' يوماً. <a href="#" onclick="accShow(\'due\');return false">عرض التفاصيل</a></div>'
       :(a.payments.count?'<div class="acc-alert ok">✔ لا توجد دفعات متأخرة'+(a.upcoming.count?' — القادم: '+fmt(a.upcoming.amount)+' د.ك':'')+'</div>':'');
@@ -1599,11 +1659,16 @@ function renderSchedule(a){
     '<span class="acc-cat">مستحقة قادمة: <b>'+a.upcoming.count+' — '+fmt(a.upcoming.amount)+' د.ك</b></span>'+
     '<span class="acc-cat" style="background:var(--green-bg);border-color:#a9d8c2">مسددة: <b>'+a.schedule.filter(x=>x.status==='مسددة').length+'</b></span>';
   const order={'متأخرة':0,'جزئية':1,'مستحقة':2,'مسددة':3};
+  const UI={'متأخرة':['⚠️','#c0392b'],'جزئية':['🌗','#e07a1f'],'مستحقة':['⏳','#e07a1f'],'مسددة':['✅','#1e8a5a']};
   const list=a.schedule.slice().sort((x,y)=>(order[x.status]-order[y.status]));
-  $('schedTbody').innerHTML=list.length?list.map(x=>
-    '<tr class="'+(x.status==='متأخرة'?'late':'')+'"><td class="num">'+esc(x.dueDate)+'</td><td>'+esc(x.description)+'</td>'+
-    tdn(fmt(x.amount))+tdn(fmt(x.settled))+tdn(fmt(x.remaining))+'<td>'+schedBadge(x)+'</td></tr>').join('')
-    :'<tr><td colspan="6" class="empty">لا توجد دفعات مستحقة — سجّل دفعة من نوع «مستحقة» مع تاريخ الاستحقاق</td></tr>';
+  $('schedGrid').innerHTML=list.length?list.map(x=>{
+    const u=UI[x.status]||UI['مستحقة'], pct=x.amount>0?Math.min(100,Math.round(x.settled/x.amount*100)):0;
+    return '<div class="mcard" style="--c:'+u[1]+'"><div class="mc-top"><div class="mc-ic">'+u[0]+'</div><div><div class="mc-t">'+esc(x.description||'دفعة')+'</div>'+
+      '<div class="mc-s">📅 الاستحقاق: '+esc(x.dueDate)+'</div></div></div>'+
+      '<div class="mc-amt">'+fmt(x.remaining)+' د.ك <span class="muted" style="font-size:11px;font-weight:600">متبقي من '+fmt(x.amount)+'</span></div>'+
+      '<div class="mc-bar"><i style="width:'+pct+'%"></i></div>'+
+      '<div class="mc-tags">'+schedBadge(x)+'<span class="mc-tag">مسدد '+fmt(x.settled)+'</span></div></div>';
+  }).join(''):'<div class="mcard empty-card">لا توجد دفعات مستحقة — سجّل دفعة من نوع «مستحقة» مع تاريخ الاستحقاق</div>';
 }
 function renderStatement(a){
   const st=a.statement, tD=st.reduce((x,r)=>x+r.debit,0), tC=st.reduce((x,r)=>x+r.credit,0);
@@ -1657,11 +1722,11 @@ function exportStatementCsv(){
 }
 /* ------------------------------- العقود ------------------------------------ */
 function renderContracts(list){
-  $('contractsTbody').innerHTML=list.length?list.map(c=>
-    '<tr><td><b>'+esc(c.name)+'</b></td><td class="num">'+esc(c.date)+'</td><td>'+esc(c.user)+'</td>'+
-    '<td style="white-space:nowrap"><a class="btn sm secondary" href="'+esc(c.url)+'" target="_blank" rel="noopener">👁 فتح</a> '+
-    '<button class="btn sm danger" onclick="delContractUI('+jsArg(c.id)+')">حذف</button></td></tr>').join('')
-    :'<tr><td colspan="4" class="empty">لم تُرفع نسخة من العقد بعد</td></tr>';
+  $('contractsGrid').innerHTML=list.length?list.map(c=>
+    '<div class="mcard" style="--c:#c9a24b"><div class="mc-top"><div class="mc-ic">📜</div><div><div class="mc-t">'+esc(c.name)+'</div><div class="mc-s">'+esc(c.date)+' • '+esc(c.user)+'</div></div></div>'+
+    '<div class="mc-act"><a class="btn sm secondary" href="'+esc(c.url)+'" target="_blank" rel="noopener">👁 فتح</a> '+
+    '<button class="btn sm danger" onclick="delContractUI('+jsArg(c.id)+')">حذف</button></div></div>').join('')
+    :'<div class="mcard empty-card">لم تُرفع نسخة من العقد بعد</div>';
 }
 function uploadContractUI(){
   const f=$('contractFile').files[0];
@@ -1696,13 +1761,15 @@ function renderPayments(pay){
     '<span class="acc-cat">محصَّل: <b>'+fmt(pay.paid)+' د.ك</b></span>'+
     '<span class="acc-cat">إجمالي المستحق (المطالَب به): <b>'+fmt(pay.due)+' د.ك</b></span>'+
     '<span class="acc-cat">عدد الدفعات: <b>'+pay.count+'</b></span>';
-  $('paymentsTbody').innerHTML=pay.list.length?pay.list.map(x=>
-    '<tr><td class="num">'+esc(x.date)+'</td>'+
-    '<td><span class="badge '+esc(x.type)+'">'+esc(x.type)+'</span></td>'+
-    '<td>'+esc(x.description)+'</td><td class="num">'+esc(x.type==='محصلة'?'':x.dueDate)+'</td><td class="num">'+fmt(x.amount)+'</td>'+
-    '<td>'+esc([x.ref,x.method].filter(Boolean).join(' / '))+'</td><td>'+esc(x.notes)+'</td>'+
-    '<td><button class="btn sm danger" onclick="delPaymentUI('+jsArg(x.id)+')">حذف</button></td></tr>').join('')
-    :'<tr><td colspan="8" class="empty">لا توجد دفعات مسجلة — أضف الدفعات المستحقة والمحصلة من العميل</td></tr>';
+  $('paymentsGrid').innerHTML=pay.list.length?pay.list.map(x=>{
+    const rec=x.type==='محصلة', c=rec?'#1e8a5a':'#e07a1f';
+    return '<div class="mcard" style="--c:'+c+'"><div class="mc-top"><div class="mc-ic">'+(rec?'💵':'🧾')+'</div><div><div class="mc-t">'+esc(x.description||(rec?'سداد':'دفعة مستحقة'))+'</div>'+
+      '<div class="mc-s">'+(rec?'محصَّلة':'مستحقة')+' • '+esc(x.date)+'</div></div></div>'+
+      '<div class="mc-amt">'+fmt(x.amount)+' د.ك</div>'+
+      '<div class="mc-tags">'+(!rec&&x.dueDate?'<span class="mc-tag">📅 استحقاق '+esc(x.dueDate)+'</span>':'')+
+      (x.ref?'<span class="mc-tag"># '+esc(x.ref)+'</span>':'')+(x.method?'<span class="mc-tag">'+esc(x.method)+'</span>':'')+(x.notes?'<span class="mc-tag">'+esc(x.notes)+'</span>':'')+'</div>'+
+      '<div class="mc-act"><button class="btn sm danger" onclick="delPaymentUI('+jsArg(x.id)+')">🗑 حذف</button></div></div>';
+  }).join(''):'<div class="mcard empty-card">لا توجد دفعات مسجلة — أضف الدفعات المستحقة والمحصلة من العميل</div>';
 }
 function addPaymentUI(){
   withBusy($('btnAddPay'),async()=>{
@@ -1730,12 +1797,15 @@ function renderExpenses(ex){
   $('expCatChips').innerHTML=EXPENSE_CATS.map(c=>
     '<span class="acc-cat">'+esc(c)+': <b>'+fmt(ex.byCategory[c]||0)+' د.ك</b></span>').join('')+
     '<span class="acc-cat" style="background:var(--green-bg);border-color:#a9d8c2">الإجمالي: <b>'+fmt(ex.total)+' د.ك</b></span>';
-  $('expensesTbody').innerHTML=ex.list.length?ex.list.map(x=>
-    '<tr><td class="num">'+esc(x.date)+'</td>'+
-    '<td><span class="badge cat">'+esc(x.category)+'</span></td>'+
-    '<td>'+esc(x.description)+'</td><td class="num">'+fmt(x.amount)+'</td><td>'+esc(x.method)+'</td>'+
-    '<td><button class="btn sm danger" onclick="delExpenseUI('+jsArg(x.id)+')">حذف</button></td></tr>').join('')
-    :'<tr><td colspan="6" class="empty">لا توجد مصروفات مسجلة — سجّل ما صُرف على العمال والمواد والتشغيل</td></tr>';
+  const EU={'مواد':['🧱','#c0762b'],'عمالة':['👷','#2f6fb5'],'معدات':['🚜','#7b4fc9'],'تشغيل':['⚙️','#12877f'],'مقاول باطن':['🤝','#b8860b'],'أخرى':['📦','#6b7a90']};
+  $('expensesGrid').innerHTML=ex.list.length?ex.list.map(x=>{
+    const u=EU[x.category]||EU['أخرى'];
+    return '<div class="mcard" style="--c:'+u[1]+'"><div class="mc-top"><div class="mc-ic">'+u[0]+'</div><div><div class="mc-t">'+esc(x.description||x.category)+'</div>'+
+      '<div class="mc-s">'+esc(x.category)+' • '+esc(x.date)+'</div></div></div>'+
+      '<div class="mc-amt">'+fmt(x.amount)+' د.ك</div>'+
+      (x.method?'<div class="mc-tags"><span class="mc-tag">'+esc(x.method)+'</span></div>':'')+
+      '<div class="mc-act"><button class="btn sm danger" onclick="delExpenseUI('+jsArg(x.id)+')">🗑 حذف</button></div></div>';
+  }).join(''):'<div class="mcard empty-card">لا توجد مصروفات مسجلة — سجّل ما صُرف على العمال والمواد والتشغيل</div>';
 }
 function addExpenseUI(){
   withBusy($('btnAddExp'),async()=>{
@@ -1889,7 +1959,7 @@ async function renderSettings(){
   const d=state.defaults||{};
   $('dOver').value=d.overhead||0; $('dProfit').value=d.profit||0; $('dTax').value=d.tax||0;
   if(isAdmin()){
-    try{ renderUsers(await api('listUsers')); }catch(e){ $('usersTbody').innerHTML='<tr><td colspan="5" class="empty">تعذر تحميل المستخدمين</td></tr>'; }
+    try{ renderUsers(await api('listUsers')); }catch(e){ $('usersGrid').innerHTML='<div class="mcard empty-card">تعذر تحميل المستخدمين</div>'; }
   }
   try{
     const log=await api('getLog',100);
@@ -1900,13 +1970,13 @@ async function renderSettings(){
 /* ------------------------------ إدارة المستخدمين ---------------------------- */
 function renderUsers(list){
   state.users=list||[];
-  $('usersTbody').innerHTML=state.users.map(u=>'<tr><td dir="ltr" style="text-align:right;font-weight:700">'+esc(u.username)+'</td>'+
-    '<td>'+(u.role==='admin'?'مدير':'مستخدم')+'</td>'+
-    '<td><span class="badge '+(u.active?'معتمد':'ملغي')+'">'+(u.active?'مفعّل':'موقوف')+'</span></td>'+
-    '<td class="num">'+esc(u.lastLogin||'—')+'</td>'+
-    '<td style="white-space:nowrap"><button class="btn secondary sm" onclick="userModal('+jsArg(u.username)+')">تعديل</button> '+
-    '<button class="btn danger sm" onclick="deleteUserUI('+jsArg(u.username)+')">حذف</button></td></tr>').join('')
-    ||'<tr><td colspan="5" class="empty">لا يوجد مستخدمون</td></tr>';
+  $('usersGrid').innerHTML=state.users.map(u=>
+    '<div class="mcard'+(u.active?'':' off')+'" style="--c:'+(u.role==='admin'?'#c9a24b':'#2f6fb5')+'"><div class="mc-top"><div class="mc-ic">'+(u.role==='admin'?'👑':'👤')+'</div>'+
+    '<div><div class="mc-t" dir="ltr" style="text-align:right">'+esc(u.username)+'</div><div class="mc-s">'+(u.role==='admin'?'مدير':'مستخدم')+' • '+(u.active?'مفعّل':'موقوف')+'</div></div></div>'+
+    '<div class="mc-tags"><span class="mc-tag">آخر دخول: '+esc(u.lastLogin||'—')+'</span></div>'+
+    '<div class="mc-act"><button class="btn secondary sm" onclick="userModal('+jsArg(u.username)+')">✏️ تعديل</button> '+
+    '<button class="btn danger sm" onclick="deleteUserUI('+jsArg(u.username)+')">حذف</button></div></div>').join('')
+    ||'<div class="mcard empty-card">لا يوجد مستخدمون</div>';
 }
 function userModal(username){
   const u=username?(state.users||[]).find(x=>x.username===username):null;
