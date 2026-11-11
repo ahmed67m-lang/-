@@ -1,9 +1,13 @@
 /** ============================================================================
- *  نظام منارات المتحدة للمقايسات والتسعير — النسخة الاحترافية v3.2 (نسخة النشر)
+ *  نظام منارات المتحدة للمقايسات والتسعير — النسخة الاحترافية v3.3 (نسخة النشر)
  *  Google Apps Script مرتبط بجدول Google Sheets
  *  متوافق تماماً مع البيانات القديمة: لا يحذف ولا يعدّل أعمدة أو صفوفاً موجودة،
- *  ويضيف فقط أعمدة التكلفة التفصيلية في نهاية ورقة LINES عند الحاجة.
+ *  ويضيف فقط أوراقاً وأعمدة جديدة عند الحاجة.
  *
+ *  الجديد في v3.3:
+ *   - حسابات المشروع: ميزانية المقايسة، مصروفات (مواد/عمالة/معدات/تشغيل/مقاول باطن)،
+ *     دفعات العميل (مستحقة/محصلة)، ورفع نسخة العقد إلى Google Drive.
+ *   - أوراق جديدة تُنشأ تلقائياً عند setup: EXPENSES و PAYMENTS و CONTRACTS.
  *  الجديد في v3.2:
  *   - تسجيل دخول باسم مستخدم وكلمة مرور (rpc) — لا تُنفَّذ أي دالة بيانات بدون جلسة صالحة.
  *   - إدارة المستخدمين من شاشة الإعدادات (مدير / مستخدم)، وكلمات المرور تُحفظ مشفّرة (hash) فقط.
@@ -13,14 +17,20 @@
  *   - حفظ رقم البند كنص حتى لا يحوّله الجدول إلى تاريخ (مثل 3/5).
  *   - دالة bootstrap واحدة لتحميل الواجهة بدل ست استدعاءات.
  * ==========================================================================*/
-const S = { CAT:'دليل البنود', PROJECTS:'PROJECTS', LINES:'LINES', LOG:'سجل التعديلات', SETTINGS:'SETTINGS' };
+const S = { CAT:'دليل البنود', PROJECTS:'PROJECTS', LINES:'LINES', LOG:'سجل التعديلات', SETTINGS:'SETTINGS',
+            EXPENSES:'EXPENSES', PAYMENTS:'PAYMENTS', CONTRACTS:'CONTRACTS' };
 const H = {
   CAT:      ['معرف','رقم الباب','اسم الباب','التصنيف الفرعي','رقم البند','وصف البند','الوصف الفرعي','الوحدة','السعر الأساسي','نشط'],
   PROJECTS: ['معرف المشروع','اسم المشروع','اسم العميل','تاريخ الإنشاء','الحالة','نسبة المصاريف %','نسبة الربح %','نسبة الضريبة %','ملاحظات'],
   LINES:    ['معرف السطر','معرف المشروع','معرف البند','رقم الباب','اسم الباب','التصنيف الفرعي','رقم البند','الوصف','الوحدة','الكمية','سعر الوحدة','الإجمالي','تاريخ التعديل','تكلفة الوحدة','إجمالي التكلفة','نسبة المصاريف الإدارية %','نسبة الأرباح %','السعر الاسترشادي','نظام التسعير','تكلفة المواد','تكلفة العمالة','تكلفة المعدات','تكلفة مقاول الباطن','نسبة الهالك %','نسبة الخصم %','ملاحظات البند'],
   LOG:      ['التاريخ','المستخدم','العملية','التفاصيل'],
-  SETTINGS: ['المفتاح','القيمة']
+  SETTINGS: ['المفتاح','القيمة'],
+  EXPENSES: ['معرف','معرف المشروع','التاريخ','الفئة','البيان','المبلغ','طريقة الصرف','ملاحظات'],
+  PAYMENTS: ['معرف','معرف المشروع','التاريخ','النوع','البيان','المبلغ','ملاحظات'],
+  CONTRACTS:['معرف','معرف المشروع','اسم الملف','معرف الملف','الرابط','تاريخ الرفع','المستخدم']
 };
+const EXPENSE_CATS = ['مواد','عمالة','معدات','تشغيل','مقاول باطن','أخرى'];
+const PAYMENT_TYPES = ['مستحقة','محصلة'];
 /** الأعمدة التي تُحفظ كنص (رقم البند) — ترقيم يبدأ من 1 */
 const TEXT_COLS = { CAT:[5], LINES:[7] };
 const PROJECT_STATUSES = ['مسودة','قيد التسعير','معتمد','قيد التنفيذ','منفذ','ملغي'];
@@ -29,9 +39,17 @@ const APP_TITLE = 'منارات المتحدة | نظام المقايسات و�
 
 /* ------------------------------ أدوات أساسية ------------------------------ */
 function db_(){ return SpreadsheetApp.getActiveSpreadsheet(); }
+/** يجلب الورقة، وينشئها بعناوينها إن كانت من أوراق النظام وغير موجودة بعد (إصلاح ذاتي بدون setup يدوي) */
 function tab_(n){
-  const sh = db_().getSheetByName(n);
-  if(!sh) throw new Error('ورقة العمل غير موجودة: ' + n);
+  let sh = db_().getSheetByName(n);
+  if(!sh){
+    const key = Object.keys(S).find(k=>S[k]===n);
+    if(!key) throw new Error('ورقة العمل غير موجودة: ' + n);
+    sh = db_().insertSheet(n);
+    sh.setRightToLeft(true);
+    sh.getRange(1,1,1,H[key].length).setValues([H[key]]);
+    sh.setFrozenRows(1);
+  }
   return sh;
 }
 function props_(){ return PropertiesService.getScriptProperties(); }
@@ -423,18 +441,36 @@ function deleteProject(projectId){
     const shP=tab_(S.PROJECTS), vP=shP.getDataRange().getValues(), ip=rowOf_(vP, projectId);
     if(ip<0) throw Error('المشروع غير موجود');
     const name=String(vP[ip][1]||'');
-    // حذف بنود المشروع على دفعات متجاورة من أسفل لأعلى
-    const shL=tab_(S.LINES), vL=shL.getDataRange().getValues();
-    let end=-1, removed=0;
-    for(let i=vL.length-1;i>=0;i--){
-      const hit = i>=1 && String(vL[i][1])===String(projectId);
-      if(hit){ if(end<0) end=i; continue; }
-      if(end>=0){ deleteRows_(shL, i+2, end-i); removed+=end-i; end=-1; }
-    }
+    let removed=deleteByProject_(S.LINES, projectId);
+    deleteByProject_(S.EXPENSES, projectId);
+    deleteByProject_(S.PAYMENTS, projectId);
+    deleteContractsByProject_(projectId);
     deleteRows_(shP, ip+1, 1);
     log_('حذف مشروع', name+' — بنود محذوفة: '+removed);
     return true;
   });
+}
+/** حذف كل صفوف مشروع من ورقة ما (على دفعات متجاورة من أسفل لأعلى) ويعيد عددها */
+function deleteByProject_(sheetName, projectId){
+  const sh=tab_(sheetName), v=sh.getDataRange().getValues();
+  let end=-1, removed=0;
+  for(let i=v.length-1;i>=0;i--){
+    const hit = i>=1 && String(v[i][1])===String(projectId);
+    if(hit){ if(end<0) end=i; continue; }
+    if(end>=0){ deleteRows_(sh, i+2, end-i); removed+=end-i; end=-1; }
+  }
+  return removed;
+}
+/** حذف عقود المشروع من الورقة مع نقل ملفاتها إلى سلة المهملات */
+function deleteContractsByProject_(projectId){
+  const sh=tab_(S.CONTRACTS), v=sh.getDataRange().getValues();
+  for(let i=v.length-1;i>=1;i--){
+    if(String(v[i][1])===String(projectId)){
+      const fid=String(v[i][3]||'');
+      if(fid){ try{ DriveApp.getFileById(fid).setTrashed(true); }catch(e){} }
+      deleteRows_(sh, i+1, 1);
+    }
+  }
 }
 function duplicateProject(projectId){
   guard_(); check_(projectId);
@@ -599,6 +635,13 @@ function projectsOverview_(){
   const byStatus={}; ps.forEach(p=>{ byStatus[p.status]=(byStatus[p.status]||0)+1; });
   const cat=rows_(S.CAT), chapters={};
   cat.forEach(r=>{ const c=String(r[2]||'عام'); chapters[c]=(chapters[c]||0)+1; });
+  // إجمالي المستحقات والمحصّل من العملاء عبر كل المشاريع
+  let dueTotal=0, paidTotal=0;
+  rows_(S.PAYMENTS).forEach(r=>{
+    const amt=Number(r[5])||0;
+    if(String(r[3])==='محصلة') paidTotal+=amt; else dueTotal+=amt;
+  });
+  totals.receivableDue=dueTotal; totals.receivedPaid=paidTotal;
   return {
     projectsCount:ps.length, byStatus:byStatus, totals:totals,
     catalogCount:cat.length, chapters:chapters,
@@ -757,5 +800,155 @@ const API_ = {
   companySettings:companySettings, setCompanyDetails:setCompanyDetails,
   defaultRates:defaultRates, setDefaultRates:setDefaultRates,
   createBOQ:createBOQ, setOutputFolder:setOutputFolder, quoteData:quoteData, costReportData:costReportData,
-  listUsers:listUsers, saveUser:saveUser, deleteUser:deleteUser, changeMyPassword:changeMyPassword
+  listUsers:listUsers, saveUser:saveUser, deleteUser:deleteUser, changeMyPassword:changeMyPassword,
+  listExpenses:listExpenses, saveExpense:saveExpense, removeExpense:removeExpense,
+  listPayments:listPayments, savePayment:savePayment, removePayment:removePayment,
+  listContracts:listContracts, uploadContract:uploadContract, removeContract:removeContract,
+  projectAccounts:projectAccounts
 };
+
+/* ---------- حسابات المشاريع: مصروفات ودفعات وعقود (v3.3) ---------- */
+function financeRows_(sheetName, projectId){
+  return rows_(sheetName).filter(r=>String(r[1])===String(projectId));
+}
+/* ------------------------------- المصروفات --------------------------------- */
+function listExpenses(projectId){
+  guard_(); check_(projectId);
+  return financeRows_(S.EXPENSES, projectId).map(r=>({
+    id:String(r[0]), projectId:String(r[1]), date:dateStr_(r[2]), category:String(r[3]||'أخرى'),
+    description:String(r[4]||''), amount:Number(r[5])||0, method:String(r[6]||''), notes:String(r[7]||'')
+  }));
+}
+function saveExpense(d){
+  guard_(); obj_(d); check_(d.projectId);
+  const amount=number_(d.amount); if(amount<=0) throw Error('أدخل مبلغاً أكبر من صفر');
+  const cat=EXPENSE_CATS.indexOf(clean_(d.category))>=0?clean_(d.category):'أخرى';
+  return locked_(()=>{
+    const sh=tab_(S.EXPENSES), v=sh.getDataRange().getValues();
+    const id=clean_(d.id)||id_();
+    const i=d.id?rowOf_(v,id,d.projectId):-1;
+    if(d.id&&i<0) throw Error('السطر غير موجود');
+    const row=[id, String(d.projectId), (i>0&&v[i][2])?v[i][2]:new Date(), cat,
+               safe_(d.description), amount, safe_(d.method), safe_(d.notes)];
+    writeRows_(sh, i>0?i+1:nextRow_(sh), [row]);
+    log_(i>0?'تعديل مصروف':'إضافة مصروف', cat+' / '+amount+' د.ك');
+    return id;
+  });
+}
+function removeExpense(projectId, id){
+  guard_(); check_(projectId); check_(id);
+  return locked_(()=>{
+    const sh=tab_(S.EXPENSES), i=rowOf_(sh.getDataRange().getValues(), id, projectId);
+    if(i<0) throw Error('السطر غير موجود');
+    deleteRows_(sh, i+1, 1);
+    log_('حذف مصروف', id);
+    return true;
+  });
+}
+/* --------------------------- دفعات العميل (التحصيل) ------------------------- */
+function listPayments(projectId){
+  guard_(); check_(projectId);
+  return financeRows_(S.PAYMENTS, projectId).map(r=>({
+    id:String(r[0]), projectId:String(r[1]), date:dateStr_(r[2]), type:String(r[3]||'مستحقة'),
+    description:String(r[4]||''), amount:Number(r[5])||0, notes:String(r[6]||'')
+  }));
+}
+function savePayment(d){
+  guard_(); obj_(d); check_(d.projectId);
+  const amount=number_(d.amount); if(amount<=0) throw Error('أدخل مبلغاً أكبر من صفر');
+  const type=PAYMENT_TYPES.indexOf(clean_(d.type))>=0?clean_(d.type):'مستحقة';
+  return locked_(()=>{
+    const sh=tab_(S.PAYMENTS), v=sh.getDataRange().getValues();
+    const id=clean_(d.id)||id_();
+    const i=d.id?rowOf_(v,id,d.projectId):-1;
+    if(d.id&&i<0) throw Error('السطر غير موجود');
+    const row=[id, String(d.projectId), (i>0&&v[i][2])?v[i][2]:new Date(), type,
+               safe_(d.description), amount, safe_(d.notes)];
+    writeRows_(sh, i>0?i+1:nextRow_(sh), [row]);
+    log_(i>0?'تعديل دفعة':'إضافة دفعة', type+' / '+amount+' د.ك');
+    return id;
+  });
+}
+function removePayment(projectId, id){
+  guard_(); check_(projectId); check_(id);
+  return locked_(()=>{
+    const sh=tab_(S.PAYMENTS), i=rowOf_(sh.getDataRange().getValues(), id, projectId);
+    if(i<0) throw Error('السطر غير موجود');
+    deleteRows_(sh, i+1, 1);
+    log_('حذف دفعة', id);
+    return true;
+  });
+}
+/* -------------------------------- العقود ----------------------------------- */
+function listContracts(projectId){
+  guard_(); check_(projectId);
+  return financeRows_(S.CONTRACTS, projectId).map(r=>({
+    id:String(r[0]), projectId:String(r[1]), name:String(r[2]||''), fileId:String(r[3]||''),
+    url:String(r[4]||''), date:dateStr_(r[5]), user:String(r[6]||'')
+  }));
+}
+/** رفع نسخة العقد إلى مجلد Drive خاص بالنظام (PDF أو صورة — حتى 10MB تقريباً) */
+function uploadContract(projectId, fileName, mimeType, base64Data){
+  guard_(); check_(projectId); check_(fileName); check_(base64Data);
+  if(String(base64Data).length>14000000) throw Error('حجم الملف كبير؛ الحد الأقصى نحو 10 ميجابايت');
+  const mime=clean_(mimeType)||'application/pdf';
+  if(!/^(application\/pdf|image\/(png|jpeg|webp))$/.test(mime)) throw Error('العقد يجب أن يكون PDF أو صورة PNG/JPG');
+  return locked_(()=>{
+    let folder=null;
+    const fid=props_().getProperty('CONTRACTS_FOLDER_ID');
+    if(fid){ try{ folder=DriveApp.getFolderById(fid); }catch(e){ folder=null; } }
+    if(!folder){
+      folder=DriveApp.createFolder('عقود مشاريع منارات المتحدة');
+      props_().setProperty('CONTRACTS_FOLDER_ID', folder.getId());
+    }
+    const blob=Utilities.newBlob(Utilities.base64Decode(base64Data), mime, clean_(fileName));
+    const file=folder.createFile(blob);
+    try{ file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); }catch(e){}
+    const id=id_();
+    writeRows_(tab_(S.CONTRACTS), nextRow_(tab_(S.CONTRACTS)),
+      [[id, String(projectId), safe_(fileName), file.getId(), file.getUrl(), new Date(), who_()]]);
+    log_('رفع عقد', fileName);
+    return {id:id, url:file.getUrl()};
+  });
+}
+function removeContract(projectId, contractId){
+  guard_(); check_(projectId); check_(contractId);
+  return locked_(()=>{
+    const sh=tab_(S.CONTRACTS), v=sh.getDataRange().getValues(), i=rowOf_(v, contractId, projectId);
+    if(i<0) throw Error('العقد غير موجود');
+    const fid=String(v[i][3]||'');
+    const name=String(v[i][2]||'');
+    deleteRows_(sh, i+1, 1);
+    if(fid){ try{ DriveApp.getFileById(fid).setTrashed(true); }catch(e){} }
+    log_('حذف عقد', name);
+    return true;
+  });
+}
+/* --------------------- ملخص حسابات المشروع (شاشة الحسابات) ------------------ */
+function projectAccounts(projectId){
+  guard_(); check_(projectId);
+  const p=projects_().find(x=>x.id===String(projectId));
+  if(!p) throw Error('المشروع غير موجود');
+  const s=summary_(p, lines_(projectId));
+  const ex=listExpenses(projectId), pays=listPayments(projectId);
+  const byCat={}; EXPENSE_CATS.forEach(c=>{byCat[c]=0;});
+  let spent=0;
+  ex.forEach(x=>{ spent+=x.amount; byCat[x.category]=round3_((byCat[x.category]||0)+x.amount); });
+  let due=0, paid=0;
+  pays.forEach(x=>{ if(x.type==='محصلة') paid+=x.amount; else due+=x.amount; });
+  const contractValue=s.final;
+  return {
+    project:p, summary:s,
+    expenses:{total:spent, byCategory:byCat, count:ex.length, list:ex},
+    payments:{due:due, paid:paid, count:pays.length, list:pays},
+    contracts:listContracts(projectId),
+    accounts:{
+      contractValue:contractValue,          // قيمة المقايسة النهائية (العقد التقديري)
+      totalReceived:paid,                   // إجمالي المحصَّل من العميل
+      totalDue:due,                         // دفعات مستحقة لم تُحصَّل
+      outstanding:round3_(contractValue-paid), // المتبقي على العميل
+      expectedNet:round3_(contractValue-spent), // صافي الربح المتوقع بعد المصروفات
+      costVsSpent:round3_(s.cost-spent)     // فرق تكلفة المقايسة عن المصروف الفعلي
+    }
+  };
+}
