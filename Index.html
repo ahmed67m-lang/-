@@ -154,8 +154,6 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
 .picker-trigger .chosen{flex:1;min-width:0;white-space:pre-line;overflow-wrap:anywhere;max-height:260px;overflow-y:auto}
 .picker-menu{max-height:420px!important}
 #itemDesc{white-space:pre-line;overflow-wrap:anywhere}
-.tile.unnum{border:2px dashed #b48a40;background:#fffaf0}
-.tile.unnum .ic-badge{background:linear-gradient(135deg,#d9a441,#a6761f)!important}
 .picker-menu{position:absolute;top:calc(100% + 4px);right:0;left:0;z-index:60;max-height:330px;overflow-y:auto;background:#fff;border:1px solid #b7c9df;border-radius:10px;box-shadow:0 12px 30px rgba(20,45,75,.18);padding:4px}
 .picker-opt{display:block;width:100%;text-align:right;background:#fff;color:var(--ink);border:0;border-bottom:1px solid #eef2f7;border-radius:6px;padding:9px 10px;font-size:12.5px;line-height:1.65;white-space:pre-line;overflow-wrap:anywhere;cursor:pointer}
 .picker-opt:hover{background:#edf3fc}
@@ -499,7 +497,7 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
       <section id="view-catalog" class="view hidden">
         <div class="card">
           <h3 class="card-title"><span class="dot"></span>دليل البنود</h3>
-          <div class="toolbar admin-only" id="unnumBar"><button class="btn gold sm" id="btnImportUnnum" onclick="importUnnumberedUI()">🔖 استيراد البنود غير المرقمة وترقيمها تلقائياً</button><span class="muted" style="font-size:12px">تُضاف في باب مستقل «بنود غير مرقمة» بأرقام UN-رقم الباب-تسلسل، ولا يتكرر ما أُضيف من قبل</span></div>
+          <div class="toolbar admin-only" id="unnumBar"><button class="btn gold sm" id="btnImportUnnum" onclick="importUnnumberedUI()">📥 استيراد البنود غير المرقمة وتصنيفها وترقيمها</button><span class="muted" style="font-size:12px">تُضاف داخل أبوابها الأصلية بتصنيف فرعي بحسب طبيعتها وترقيم رئيسي وفرعي، ولا يتكرر ما أُضيف من قبل</span></div>
           <div class="crumb" id="catCrumb">اختر باب الأعمال بالضغط على أيقونته</div>
           <div id="catChaptersGrid" class="grid"></div>
           <div id="catSubsGrid" class="grid hidden"></div>
@@ -715,7 +713,7 @@ function importUnnumberedUI(){
     const r=await api('importUnnumbered');
     await reloadCatalog();
     state.catChapter=''; state.catSub=''; renderCatalogView();
-    toast(r.added?('تمت إضافة '+r.added+' بند في باب «بنود غير مرقمة»'+(r.skipped?(' — تم تخطي '+r.skipped+' مكرر'):'')):'لا توجد بنود جديدة — كل البنود غير المرقمة مضافة مسبقاً','ok');
+    toast(r.added?('تمت إضافة '+r.added+' بند داخل أبوابها وتصنيفاتها'+(r.skipped?(' — تم تخطي '+r.skipped+' مكرر'):'')):'لا توجد بنود جديدة — كل البنود غير المرقمة مضافة مسبقاً','ok');
   })();
 }
 async function reloadCatalog(){ setCatalog(await api('catalogAll')); }
@@ -846,9 +844,8 @@ function fillStatusFilters(){
 function curProject(){ return state.projects.find(p=>p.id===state.projectId)||null; }
 
 /* --------------------- نظام أيقونات الأعمال المميزة ------------------------ */
-const UNNUM_CHAPTER='بنود غير مرقمة';
 const ICON_MAP=[
- [/بنود غير مرقمة/,'🔖'],
+ [/العاب|ألعاب|ملاعب|playground/,'🎠'],[/رياض|sport|fitness/,'🏀'],[/lighting|light\b|led\b/,'💡'],[/pipes|cable|wire/,'🔌'],
  [/هدم|إزال|ازال|تكسير/,'🧨'],[/حفر|ردم|دفان|تربة|مساحة|تسوية|ميول/,'⛏️'],
  [/خرسان|تسليح|أساس|قواعد|أعمدة|أسمنت|اسمنت|مسلح|سقايل|سقالات|هيكل/,'🏗️'],
  [/مباني|طوب|بلوك|بناء/,'🧱'],
@@ -876,8 +873,7 @@ function iconFor(t){
   const hit=ICON_MAP.find(i=>i[0].test(x));
   return hit?hit[1]:ICON_POOL[hashStr(x)%ICON_POOL.length];
 }
-function iconColor(t){ if(t===UNNUM_CHAPTER) return '#a6761f'; return ICON_COLORS[hashStr(String(t||''))%ICON_COLORS.length]; }
-function tileCls(c){ return c===UNNUM_CHAPTER?'tile unnum':'tile'; }
+function iconColor(t){ return ICON_COLORS[hashStr(String(t||''))%ICON_COLORS.length]; }
 function iconBadge(t){ return '<span class="ic-badge" style="background:'+iconColor(t)+'">'+iconFor(t)+'</span>'; }
 
 /* ------------------------------- لوحة التحكم ------------------------------- */
@@ -1046,7 +1042,7 @@ function subList(ch){ return [...new Set(state.catalog.filter(x=>x.chapter===ch)
 function renderChapters(){
   state.chapter=''; state.sub='';
   $('chaptersGrid').innerHTML=chapterList().map(c=>
-    '<button class="'+tileCls(c)+'" onclick="openChapter('+jsArg(c)+')">'+iconBadge(c)+esc(c)+'<small>'+state.catalog.filter(x=>x.chapter===c).length+' بند</small></button>').join('');
+    '<button class="tile" onclick="openChapter('+jsArg(c)+')">'+iconBadge(c)+esc(c)+'<small>'+state.catalog.filter(x=>x.chapter===c).length+' بند</small></button>').join('');
   $('chaptersGrid').classList.remove('hidden');
   $('subsGrid').classList.add('hidden');
   $('itemArea').classList.add('hidden');
@@ -1288,7 +1284,7 @@ function renderCatChapters(){
   state.catChapter=''; state.catSub='';
   const chs=[...new Set(state.catalogAll.map(x=>x.chapter))];
   $('catChaptersGrid').innerHTML=chs.map(c=>
-    '<button class="'+tileCls(c)+'" onclick="openCatChapter('+jsArg(c)+')">'+iconBadge(c)+esc(c)+
+    '<button class="tile" onclick="openCatChapter('+jsArg(c)+')">'+iconBadge(c)+esc(c)+
     '<small>'+state.catalogAll.filter(x=>x.chapter===c).length+' بند</small></button>').join('')
     ||'<div class="empty">لا توجد بنود في الدليل</div>';
   $('catChaptersGrid').classList.remove('hidden');

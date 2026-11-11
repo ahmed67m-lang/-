@@ -4,7 +4,7 @@
  *  متوافق تماماً مع البيانات القديمة: لا يحذف ولا يعدّل أعمدة أو صفوفاً موجودة،
  *  ويضيف فقط أوراقاً وأعمدة جديدة عند الحاجة.
  *
- *  الجديد في v3.4: باب مستقل «بنود غير مرقمة» (UN-<باب>-<تسلسل>) للبنود التي بلا رقم في ملف الأسعار.
+ *  الجديد في v3.4: البنود التي بلا رقم في ملف الأسعار تُضاف داخل أبوابها بتصنيف فرعي وترقيم رئيسي/فرعي (س/باب، ف/س/باب).
  *  الجديد في v3.3:
  *   - حسابات المشروع: ميزانية المقايسة، مصروفات (مواد/عمالة/معدات/تشغيل/مقاول باطن)،
  *     دفعات العميل (مستحقة/محصلة)، ورفع نسخة العقد إلى Google Drive.
@@ -349,7 +349,6 @@ function importOriginal(){
 
 
 /* ---------------- البنود غير المرقّمة في ملف الأسعار الأصلي (v3.4) ---------------- */
-const UNNUM = { CHAPTER_NO:'U', CHAPTER:'بنود غير مرقمة', PREFIX:'UN-' };
 /** يحوّل نص سعر قد يحتوي أرقاماً عربية وفواصل ٬ ٫ ورمز العملة إلى رقم (أو -1 إن تعذّر) */
 function parsePrice_(raw){
   if(typeof raw==='number') return Number.isFinite(raw)&&raw>=0 ? raw : -1;
@@ -378,34 +377,78 @@ function unnumberedFromSource_(){
   }
   return out;
 }
-/** إضافة البنود غير المرقّمة إلى باب مستقل «بنود غير مرقمة» بترقيم تلقائي UN-<رقم الباب>-<تسلسل>.
- *  آمنة للتكرار: لا تُضيف ما أُضيف من قبل ولا تغيّر أي بند موجود. يُشغَّل من زر المدير أو من المحرر. */
+/** تصنيف فرعي للبند غير المرقّم بحسب طبيعته (أوصاف عربية أو إنجليزية) */
+function classifyUn_(chName, desc, detail){
+  const text=String(chName)+' '+String(desc)+' '+String(detail||'');
+  if(/العاب|ألعاب|ملاعب/.test(chName)){
+    return /fitness|gym|exercise|sport|basketball|football|tennis|volley|court|goal|treadmill|رياض/i.test(text) ? 'معدات رياضية' : 'ألعاب أطفال';
+  }
+  const ar=classify_(chName, desc);
+  if(ar!=='بنود عامة') return ar;
+  const en=[[/light|lamp|led\b|luminaire|bulb|spot|flood/i,'إنارة'],[/cable|wire|conduit|tray|silicone|xlpe/i,'كابلات وتمديدات'],
+    [/pump|valve|pipe|fitting|sanitary|water/i,'مضخات وتمديدات مياه'],[/paint|coating|primer/i,'دهانات'],
+    [/door|window|glass|aluminium|aluminum/i,'أبواب ونوافذ'],[/tile|floor|carpet|marble|granite|turf|rubber/i,'أرضيات'],
+    [/air.?condition|hvac|duct|chiller|fan\b/i,'تكييف وتهوية'],[/fire|alarm|sprinkler/i,'مكافحة الحريق'],
+    [/bench|table|chair|bin\b|shade|canopy|furniture/i,'أثاث وتجهيزات']];
+  const hit=en.find(x=>x[0].test(text));
+  return hit?hit[1]:'بنود عامة';
+}
+/** الرقم الرئيسي الذي يحمله رقم بند موجود: «س/باب» ← س ، «ف/س/باب» ← س ، وإلا -1 */
+function mainNoOf_(code, chNo){
+  const p=String(code||'').split('/');
+  if(p.length<2 || p[p.length-1]!==String(chNo)) return -1;
+  const m=Number(p.length===2 ? p[0] : p[1]);
+  return Number.isFinite(m) ? m : -1;
+}
+/** إضافة البنود غير المرقّمة داخل أبوابها الأصلية (مع تصنيف فرعي بحسب الطبيعة) بترقيم يتّبع أسلوب الدليل:
+ *  رقم رئيسي لكل بند «س/الباب»، وإن تعدّدت مقاساته أو درجاته فترقيم فرعي «ف/س/الباب».
+ *  آمنة للتكرار: لا تُضيف ما أُضيف من قبل ولا تغيّر أي بند موجود. */
 function importUnnumbered_(){
   const items=unnumberedFromSource_();
   if(!items.length) return {added:0, total:0, skipped:0, message:'لا توجد بنود بدون رقم في ورقة الأسعار'};
   return locked_(()=>{
     const sh=tab_(S.CAT), v=sh.getDataRange().getValues();
-    const have=new Set(), seq={};
+    const un=t=>String(t==null?'':t).trim().replace(/^'/,'');   // يُهمل بادئة الحماية من المعادلات
+    const keyOf=(chNo,desc,detail,price)=>[chNo,un(desc),un(detail),round3_(price)].join('|');
+    const have=new Set(), maxMain={}, chName={}, groups={};   // groups: chNo|وصف ← {main, count}
     for(let i=1;i<v.length;i++){
-      const code=String(v[i][4]||'');
-      if(String(v[i][1])!==UNNUM.CHAPTER_NO || code.indexOf(UNNUM.PREFIX)!==0) continue;
-      const m=code.match(/^UN-(.+)-(\d+)$/);
-      if(m) seq[m[1]]=Math.max(seq[m[1]]||0, Number(m[2]));
-      const un=t=>String(t==null?'':t).trim().replace(/^'/,'');   // يُهمل بادئة الحماية من المعادلات
-      have.add([un(v[i][3]), un(v[i][5]), un(v[i][6]), round3_(Number(v[i][8])||0)].join('|'));
+      const chNo=String(v[i][1]); if(!chNo) continue;
+      if(!chName[chNo]) chName[chNo]=String(v[i][2]);
+      have.add(keyOf(chNo,v[i][5],v[i][6],Number(v[i][8])||0));
+      const m=mainNoOf_(formatItemCode_(v[i][4]), chNo);
+      if(m>=0){ maxMain[chNo]=Math.max(maxMain[chNo]||0,m);
+        const gk=chNo+'|'+un(v[i][5]); if(!groups[gk]) groups[gk]={main:m,count:0}; groups[gk].count++; }
     }
-    const rows=[]; let skipped=0;
+    // تجميع البنود الجديدة بحسب (الباب + الوصف)
+    const fresh=[], order=[], byGroup={};
     items.forEach(x=>{
-      const k=[x.chName, x.desc, x.detail, round3_(x.price)].join('|');
-      if(have.has(k)){ skipped++; return; }
-      have.add(k);
-      seq[x.chNo]=(seq[x.chNo]||0)+1;
-      const code=UNNUM.PREFIX+x.chNo+'-'+String(seq[x.chNo]).padStart(3,'0');
-      rows.push([id_(), UNNUM.CHAPTER_NO, UNNUM.CHAPTER, safe_(x.chName), code, safe_(x.desc), safe_(x.detail), safe_(x.unit), x.price, true]);
+      const k=keyOf(x.chNo,x.desc,x.detail,x.price);
+      if(have.has(k)) return;
+      have.add(k); fresh.push(x);
+      const gk=x.chNo+'|'+x.desc;
+      if(!byGroup[gk]){ byGroup[gk]=[]; order.push(gk); }
+      byGroup[gk].push(x);
+    });
+    const rows=[], bySub={}, perChapter={};
+    order.forEach(gk=>{
+      const list=byGroup[gk], chNo=list[0].chNo;
+      let g=groups[gk], main;
+      if(g){ main=g.main; }
+      else { main=(maxMain[chNo]||0)+1; maxMain[chNo]=main; g={main:main,count:0}; groups[gk]=g; }
+      const multi = list.length>1 || g.count>0;
+      list.forEach(x=>{
+        g.count++;
+        const code = multi ? (g.count+'/'+main+'/'+chNo) : (main+'/'+chNo);
+        const chapter = chName[chNo] || x.chName;
+        const sub = classifyUn_(chapter, x.desc, x.detail);
+        rows.push([id_(), chNo, safe_(chapter), safe_(sub), code, safe_(x.desc), safe_(x.detail), safe_(x.unit), x.price, true]);
+        perChapter[chapter]=(perChapter[chapter]||0)+1;
+        bySub[chapter+' ← '+sub]=(bySub[chapter+' ← '+sub]||0)+1;
+      });
     });
     for(let i=0;i<rows.length;i+=200) writeRows_(sh, nextRow_(sh), rows.slice(i,i+200), TEXT_COLS.CAT);
     if(rows.length) log_('استيراد بنود غير مرقمة','عدد البنود: '+rows.length);
-    return {added:rows.length, skipped:skipped, total:items.length};
+    return {added:rows.length, skipped:items.length-fresh.length, total:items.length, perChapter:perChapter, bySub:bySub};
   });
 }
 function importUnnumbered(){ adminOnly_(); return importUnnumbered_(); }
