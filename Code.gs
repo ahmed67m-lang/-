@@ -1,9 +1,10 @@
 /** ============================================================================
- *  نظام منارات المتحدة للمقايسات والتسعير — النسخة الاحترافية v3.3 (نسخة النشر)
+ *  نظام منارات المتحدة للمقايسات والتسعير — النسخة الاحترافية v3.4 (نسخة النشر)
  *  Google Apps Script مرتبط بجدول Google Sheets
  *  متوافق تماماً مع البيانات القديمة: لا يحذف ولا يعدّل أعمدة أو صفوفاً موجودة،
  *  ويضيف فقط أوراقاً وأعمدة جديدة عند الحاجة.
  *
+ *  الجديد في v3.4: باب مستقل «بنود غير مرقمة» (UN-<باب>-<تسلسل>) للبنود التي بلا رقم في ملف الأسعار.
  *  الجديد في v3.3:
  *   - حسابات المشروع: ميزانية المقايسة، مصروفات (مواد/عمالة/معدات/تشغيل/مقاول باطن)،
  *     دفعات العميل (مستحقة/محصلة)، ورفع نسخة العقد إلى Google Drive.
@@ -345,6 +346,71 @@ function importOriginal(){
     return {count:out.length, chapters:new Set(out.map(x=>x[2])).size};
   });
 }
+
+
+/* ---------------- البنود غير المرقّمة في ملف الأسعار الأصلي (v3.4) ---------------- */
+const UNNUM = { CHAPTER_NO:'U', CHAPTER:'بنود غير مرقمة', PREFIX:'UN-' };
+/** يحوّل نص سعر قد يحتوي أرقاماً عربية وفواصل ٬ ٫ ورمز العملة إلى رقم (أو -1 إن تعذّر) */
+function parsePrice_(raw){
+  if(typeof raw==='number') return Number.isFinite(raw)&&raw>=0 ? raw : -1;
+  let t=String(raw==null?'':raw).trim();
+  if(!t) return -1;
+  t=t.replace(/[٠-٩]/g,d=>String(d.charCodeAt(0)-1632)).replace(/[۰-۹]/g,d=>String(d.charCodeAt(0)-1776))
+     .replace(/[٬,\s\u200e\u200f]/g,'').replace(/٫/g,'.');
+  const m=t.match(/\d+(?:\.\d+)?/);   // أول رقم فقط، فيُهمل رمز العملة «د.ك.»
+  const n=m?Number(m[0]):NaN;
+  return Number.isFinite(n)&&n>=0 ? n : -1;
+}
+/** يقرأ من ورقة الأسعار الأصلية البنود التي لا تحمل «رقم بند» (الأوصاف الطويلة بالإنجليزية غالباً) */
+function unnumberedFromSource_(){
+  const norm=x=>String(x).replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/\s+/g,'').trim();
+  const source=db_().getSheets().find(sh=>norm(sh.getName())===norm('جدول وصف البنود وأسعارها'));
+  if(!source) throw Error('لم أجد ورقة «جدول وصف البنود وأسعارها» داخل ملف البرنامج');
+  const vals=source.getDataRange().getValues(), out=[], seen=new Set();
+  for(let i=1;i<vals.length;i++){
+    const r=vals[i], no=clean_(formatItemCode_(r[1])), chNo=clean_(r[2]), chName=clean_(r[3]), desc=clean_(r[4]);
+    if(no || !chNo || !chName || !desc || desc==='وصف المادة') continue;   // أي صف له رقم بند يُستورد من importOriginal
+    const detail=clean_(r[5]), unit=clean_(r[6]), price=parsePrice_(r[7]);
+    const key=chNo+'|'+desc+'|'+detail+'|'+price;
+    if(seen.has(key)) continue;   // تكرار حرفي لنفس البند
+    seen.add(key);
+    out.push({chNo:chNo, chName:chName, desc:desc, detail:detail, unit:unit, price:price<0?0:price});
+  }
+  return out;
+}
+/** إضافة البنود غير المرقّمة إلى باب مستقل «بنود غير مرقمة» بترقيم تلقائي UN-<رقم الباب>-<تسلسل>.
+ *  آمنة للتكرار: لا تُضيف ما أُضيف من قبل ولا تغيّر أي بند موجود. يُشغَّل من زر المدير أو من المحرر. */
+function importUnnumbered_(){
+  const items=unnumberedFromSource_();
+  if(!items.length) return {added:0, total:0, skipped:0, message:'لا توجد بنود بدون رقم في ورقة الأسعار'};
+  return locked_(()=>{
+    const sh=tab_(S.CAT), v=sh.getDataRange().getValues();
+    const have=new Set(), seq={};
+    for(let i=1;i<v.length;i++){
+      const code=String(v[i][4]||'');
+      if(String(v[i][1])!==UNNUM.CHAPTER_NO || code.indexOf(UNNUM.PREFIX)!==0) continue;
+      const m=code.match(/^UN-(.+)-(\d+)$/);
+      if(m) seq[m[1]]=Math.max(seq[m[1]]||0, Number(m[2]));
+      const un=t=>String(t==null?'':t).trim().replace(/^'/,'');   // يُهمل بادئة الحماية من المعادلات
+      have.add([un(v[i][3]), un(v[i][5]), un(v[i][6]), round3_(Number(v[i][8])||0)].join('|'));
+    }
+    const rows=[]; let skipped=0;
+    items.forEach(x=>{
+      const k=[x.chName, x.desc, x.detail, round3_(x.price)].join('|');
+      if(have.has(k)){ skipped++; return; }
+      have.add(k);
+      seq[x.chNo]=(seq[x.chNo]||0)+1;
+      const code=UNNUM.PREFIX+x.chNo+'-'+String(seq[x.chNo]).padStart(3,'0');
+      rows.push([id_(), UNNUM.CHAPTER_NO, UNNUM.CHAPTER, safe_(x.chName), code, safe_(x.desc), safe_(x.detail), safe_(x.unit), x.price, true]);
+    });
+    for(let i=0;i<rows.length;i+=200) writeRows_(sh, nextRow_(sh), rows.slice(i,i+200), TEXT_COLS.CAT);
+    if(rows.length) log_('استيراد بنود غير مرقمة','عدد البنود: '+rows.length);
+    return {added:rows.length, skipped:skipped, total:items.length};
+  });
+}
+function importUnnumbered(){ adminOnly_(); return importUnnumbered_(); }
+/** للتشغيل اليدوي من محرر Apps Script */
+function importUnnumberedItems(){ setup(); return importUnnumbered_(); }
 
 /* ------------------------------ دليل البنود ------------------------------- */
 function catalogAll_(){
@@ -804,7 +870,7 @@ const API_ = {
   listExpenses:listExpenses, saveExpense:saveExpense, removeExpense:removeExpense,
   listPayments:listPayments, savePayment:savePayment, removePayment:removePayment,
   listContracts:listContracts, uploadContract:uploadContract, removeContract:removeContract,
-  projectAccounts:projectAccounts
+  projectAccounts:projectAccounts, importUnnumbered:importUnnumbered
 };
 
 /* ---------- حسابات المشاريع: مصروفات ودفعات وعقود (v3.3) ---------- */
