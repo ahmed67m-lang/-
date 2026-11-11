@@ -107,7 +107,7 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
 .badge.محصلة{background:var(--green-bg);color:var(--green)}
 .badge.مستحقة{background:var(--amber-bg);color:var(--amber)}
 .badge.cat{background:var(--blue-bg);color:#1f4d8c}
-/* ---------- بطاقات أيقونية (v3.8) ---------- */
+/* ---------- بطاقات أيقونية (v3.9) ---------- */
 .kpi:nth-child(1){border-top:4px solid #2f6fb5}.kpi:nth-child(2){border-top:4px solid #1e8a5a}.kpi:nth-child(3){border-top:4px solid #7b4fc9}.kpi:nth-child(4){border-top:4px solid #e07a1f}.kpi:nth-child(5){border-top:4px solid #c0392b}.kpi:nth-child(6){border-top:4px solid #12877f}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-top:12px}
 .cards.sm{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
@@ -365,7 +365,7 @@ tr.late td{background:#fff3f2}
     <div class="side-brand">
       <div class="logo">🏗️</div>
       <h1>منارات المتحدة</h1>
-      <div class="sub">نظام المقايسات والتسعير v3.8</div>
+      <div class="sub">نظام المقايسات والتسعير v3.9</div>
     </div>
     <nav class="side-nav" id="sideNav">
       <button class="nav-item active" data-view="home"><span class="ic">🏠</span><span class="nav-label">الرئيسية</span></button>
@@ -612,7 +612,8 @@ tr.late td{background:#fff3f2}
               <button class="btn" onclick="openItemModal()">✚ بند جديد</button>
               <span class="muted" id="catCount" style="font-size:12px"></span>
             </div>
-            <div class="cards sm" id="catalogGrid"></div>
+            <div class="table-wrap"><table><thead><tr><th>رقم البند</th><th>التصنيف الفرعي</th><th>الوصف</th><th>الوحدة</th><th>السعر الاسترشادي</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="catalogTbody"></tbody></table></div>
+          <div id="catTip" class="picker-tip hidden" style="position:fixed;top:0;left:12px;z-index:90"></div>
           </div>
         </div>
       </section>
@@ -1498,16 +1499,39 @@ function renderCatalogTable(){
     (x.code+' '+x.description+' '+x.detail).toLowerCase().includes(q));
   const CAP=150;
   $('catCount').textContent='النتائج: '+arr.length+(arr.length>CAP?' — يُعرض أول '+CAP+' (ضيّق البحث)':'');
-  $('catalogGrid').innerHTML=arr.slice(0,CAP).map(x=>{
-    const ic=iconFor(x.sub||x.chapter);
-    return '<div class="mcard'+(x.active?'':' off')+'" style="--c:'+(x.active?'#2f6fb5':'#6b7a90')+'">'+
-    '<div class="mc-top"><div class="mc-ic" style="font-size:20px;width:46px;height:46px">'+ic+'</div><div><div class="mc-t" style="direction:ltr;text-align:right">'+esc(x.code)+'</div><div class="mc-s">'+esc(x.sub)+'</div></div></div>'+
-    '<div class="mc-desc">'+esc(x.description)+'</div>'+
-    '<div class="mc-tags"><span class="mc-tag">'+esc(x.unit||'—')+'</span><span class="mc-tag" style="direction:ltr">'+fmt(x.price)+' د.ك</span>'+(x.method?'<span class="mc-tag">🛠️ طريقة تنفيذ</span>':'')+'<span class="mc-tag">'+(x.active?'نشط':'موقوف')+'</span></div>'+
-    '<div class="mc-act"><button class="btn sm secondary" onclick="openItemModal('+jsArg(x.id)+')">✏️ تعديل</button> '+
-    '<button class="btn sm '+(x.active?'danger':'green')+'" onclick="toggleItemActive('+jsArg(x.id)+','+!x.active+')">'+(x.active?'إيقاف':'تفعيل')+'</button></div></div>';
-  }).join('')||'<div class="mcard empty-card">لا توجد بنود مطابقة</div>';
+  $('catalogTbody').innerHTML=arr.slice(0,CAP).map(x=>
+    '<tr class="cat-row" data-id="'+esc(x.id)+'" style="'+(x.active?'':'opacity:.5')+'"><td><b>'+esc(x.code)+'</b></td><td>'+esc(x.sub)+'</td>'+
+    '<td>'+esc(x.description)+(x.detail?'<div class="muted" style="font-size:11px">↳ '+esc(x.detail)+'</div>':'')+'</td>'+
+    '<td>'+esc(x.unit)+'</td><td class="num">'+fmt(x.price)+'</td>'+
+    '<td><span class="badge '+(x.active?'معتمد':'ملغي')+'">'+(x.active?'نشط':'موقوف')+'</span></td>'+
+    '<td style="white-space:nowrap"><button class="btn sm secondary" onclick="openItemModal('+jsArg(x.id)+')">تعديل</button> '+
+    '<button class="btn sm '+(x.active?'danger':'green')+'" onclick="toggleItemActive('+jsArg(x.id)+','+!x.active+')">'+(x.active?'إيقاف':'تفعيل')+'</button></td></tr>'
+  ).join('')||'<tr><td colspan="7" class="empty">لا توجد بنود مطابقة</td></tr>';
 }
+function tipHtml(x){
+  const sec=(t,v)=>'<div class="tip-sec"><h4>'+t+'</h4>'+v+'</div>';
+  const none='<span class="tip-none">لم تُسجَّل بعد</span>';
+  return sec('📝 الوصف التفصيلي للبند','<b>'+esc(x.code)+'</b> — '+esc(x.description))+
+    sec('🔎 التفاصيل / المواصفات',x.detail?esc(x.detail):none)+
+    sec('🛠️ طريقة التنفيذ',x.method?esc(x.method):none)+
+    '<div class="tip-meta"><span>الوحدة: '+esc(x.unit||'—')+'</span><span>السعر الاسترشادي: '+fmt(x.price)+' د.ك</span><span>'+esc(x.sub)+'</span></div>';
+}
+(function(){
+  let cur='';
+  document.addEventListener('mouseover',e=>{
+    const tip=document.getElementById('catTip'); if(!tip) return;
+    const tr=e.target.closest&&e.target.closest('#catalogTbody tr.cat-row');
+    if(!tr||e.target.closest('button')){ tip.classList.add('hidden'); cur=''; return; }
+    const x=state.catalogAll.find(v=>v.id===tr.dataset.id); if(!x) return;
+    if(cur!==x.id){ tip.innerHTML=tipHtml(x); cur=x.id; }
+    tip.classList.remove('hidden');
+    const r=tr.getBoundingClientRect(), h=tip.offsetHeight;
+    tip.style.top=Math.max(70,Math.min(r.top+r.height/2-h/2,window.innerHeight-h-12))+'px';
+    tip.style.width='min(440px,40vw)';
+  });
+  document.addEventListener('mouseleave',()=>{ const t=document.getElementById('catTip'); if(t) t.classList.add('hidden'); });
+  document.addEventListener('scroll',()=>{ const t=document.getElementById('catTip'); if(t) t.classList.add('hidden'); },true);
+})();
 function openItemModal(id){
   const x=id?state.catalogAll.find(v=>v.id===id):null;
   openModal(x?'تعديل بند في الدليل':'إضافة بند جديد للدليل',
