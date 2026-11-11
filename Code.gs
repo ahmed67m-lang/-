@@ -21,7 +21,7 @@
 const S = { CAT:'دليل البنود', PROJECTS:'PROJECTS', LINES:'LINES', LOG:'سجل التعديلات', SETTINGS:'SETTINGS',
             EXPENSES:'EXPENSES', PAYMENTS:'PAYMENTS', CONTRACTS:'CONTRACTS' };
 const H = {
-  CAT:      ['معرف','رقم الباب','اسم الباب','التصنيف الفرعي','رقم البند','وصف البند','الوصف الفرعي','الوحدة','السعر الأساسي','نشط'],
+  CAT:      ['معرف','رقم الباب','اسم الباب','التصنيف الفرعي','رقم البند','وصف البند','الوصف الفرعي','الوحدة','السعر الأساسي','نشط','طريقة التنفيذ'],
   PROJECTS: ['معرف المشروع','اسم المشروع','اسم العميل','تاريخ الإنشاء','الحالة','نسبة المصاريف %','نسبة الربح %','نسبة الضريبة %','ملاحظات'],
   LINES:    ['معرف السطر','معرف المشروع','معرف البند','رقم الباب','اسم الباب','التصنيف الفرعي','رقم البند','الوصف','الوحدة','الكمية','سعر الوحدة','الإجمالي','تاريخ التعديل','تكلفة الوحدة','إجمالي التكلفة','نسبة المصاريف الإدارية %','نسبة الأرباح %','السعر الاسترشادي','نظام التسعير','تكلفة المواد','تكلفة العمالة','تكلفة المعدات','تكلفة مقاول الباطن','نسبة الهالك %','نسبة الخصم %','ملاحظات البند'],
   LOG:      ['التاريخ','المستخدم','العملية','التفاصيل'],
@@ -313,11 +313,59 @@ function bootstrap(){
   };
 }
 
-function classify_(name,desc){
-  const s=(name+' '+desc).toLowerCase();
-  const groups=[['هدم وإزالة',/هدم|ازال|إزال|تكسير|فك /],['حفر وردم',/حفر|ردم|دفان|تربة/],['خرسانة وتسليح',/خرسان|تسليح|اسمنت|أسمنت/],['أبواب ونوافذ',/باب|أبواب|نافذ|شباك/],['أرضيات',/أرضي|بلاط|سيراميك|رخام|جرانيت|بورسلان/],['حوائط وكسوة',/حائط|حوائط|جدار|قواطع|تكسي/],['أسقف',/سقف|أسقف|جبس|سقوف/],['دهانات وتشطيبات',/دهان|صبغ|معجون|طلاء/],['تمديدات كهربائية',/كهرب|كابل|كيبل|أسلاك|مفتاح|مقبس/],['إنارة',/إنار|إضاء|لمبة|كشاف/],['تكييف وتهوية',/تكييف|تبريد|مكيف|دكت|تهوية/],['تغذية وصرف',/صرف|مياه|أنبوب|مواسير|خلاط|مغسل|مرحاض/],['عزل',/عزل|مائي|حراري/],['حدائق وري',/زراع|ري |نبات|نخيل/],['مكافحة الحريق',/حريق|اطفاء|إطفاء|رشاش/]];
-  return (groups.find(g=>g[1].test(s))||['بنود عامة'])[0];
+/** قواعد التصنيف الفرعي للبنود بحسب طبيعتها (الأقدم أولوية) — الأوصاف العربية */
+const SUB_RULES_AR = [
+  ['مكافحة الحريق', /حريق|اطفاء|إطفاء|انذار|إنذار/],
+  ['هدم وإزالة', /هدم|إزال|ازال|تكسير|نزع|قلع|فك /],
+  ['حفر وردم', /حفر|ردم|دفان|تربة|اعمال ترابية|أعمال ترابية/],
+  ['خرسانة وتسليح', /خرسان|تسليح|اسمنت|أسمنت|شدات|اساسات|أساسات|قواعد/],
+  ['حدائق وري', /زراع|نبات|نخيل|عشب|شجر|أشجار|اشجار|شبكة الري|شبكه الري|رشاش|تنقيط|(^|\s)(ال)?ري(\s|$)/],
+  ['مباني وبياض', /مباني|بلوك|طوب|بناء|لياسة|لياسه|محارة|بياض/],
+  ['أبواب ونوافذ', /باب|أبواب|ابواب|نافذ|شباك|ألومنيوم|الومنيوم|زجاج|واجهات/],
+  ['أرضيات', /أرضي|ارضي|بلاط|سيراميك|رخام|جرانيت|بورسلان|موزاييك|باركيه|انترلوك|إنترلوك|كربستون/],
+  ['حوائط وكسوة', /حائط|حوائط|جدار|قواطع|تكسي|كسوة|كسوه|كلادينج/],
+  ['أسقف', /سقف|أسقف|اسقف|سقوف|جبس/],
+  ['دهانات وتشطيبات', /دهان|صبغ|معجون|طلاء|بوية|بويه/],
+  ['عزل', /عزل|رطوب/],
+  ['إنارة', /إنار|انار|إضاء|اضاء|كشاف|لمبة|ثريا/],
+  ['تمديدات كهربائية', /كهرب|كابل|كيبل|أسلاك|اسلاك|مفتاح|مقبس|لوحة|لوحه/],
+  ['تكييف وتهوية', /تكييف|تبريد|مكيف|دكت|تهوية|تهويه|فريون|شيلر|مروحة|مروحه/],
+  ['تغذية وصرف', /صرف|مياه|أنبوب|انبوب|مواسير|خلاط|مغسل|مرحاض|خزان|مضخ|سباك|تغذية|تغذيه/]
+];
+/** قواعد الأوصاف الإنجليزية (أبواب الكهرباء والإنارة والتيار الخفيف وغيرها) */
+const SUB_RULES_EN = [
+  ['إنارة الأحجار والأرضيات', /stone|kerb|brick light|inground|in-ground|paver/i],
+  ['إنارة تحت الماء', /underwater|submersible|pond/i],
+  ['إنارة LED ديكورية', /pixel|rgb|led strip|linear light|led tube|flat led|facade|neon|wall wash/i],
+  ['إنارة خارجية وأعمدة', /street|pole|post light|bollard|garden|landscape|flood|spot|projector/i],
+  ['إنارة داخلية', /downlight|panel light|recessed|pendant|chandelier|ceiling light|wall light|wall lamp|emergency|exit sign/i],
+  ['محولات وأنظمة تحكم', /driver|transformer|dimmer|controller|dmx|power supply|ballast/i],
+  ['إنارة', /\blight|lamp|\bled\b|luminaire|fixture/i],
+  ['سخانات', /heater|boiler/i],
+  ['لوحات توزيع وقواطع', /panel|mdb|smdb|\bdb\b|breaker|mccb|mcb|switchgear|busbar|feeder|isolator/i],
+  ['كابلات ومواسير', /cable|wire|conduit|trunking|xlpe|silicone|pipe|tray/i],
+  ['ماكينات ومعدات كهربائية', /generator|motor|pump|ups\b|inverter|compressor/i],
+  ['تيار خفيف واتصالات', /cctv|camera|telephone|data|network|fire alarm|intercom|access control|speaker|pa system|\btv\b|fiber|fibre|rack/i],
+  ['تكييف وتهوية', /air.?condition|hvac|duct|chiller|\bfan\b|split unit|fcu/i],
+  ['مكافحة الحريق', /fire|sprinkler|extinguisher/i],
+  ['أبواب ونوافذ', /door|window|glass|aluminium|aluminum/i],
+  ['دهانات وتشطيبات', /paint|coating|primer/i],
+  ['أرضيات', /tile|floor|carpet|marble|granite|turf|rubber/i],
+  ['أثاث وتجهيزات', /bench|table|chair|\bbin\b|shade|canopy|furniture|pergola/i]
+];
+/** كل أسماء التصنيفات التي يولّدها النظام آلياً (لا يُعاد تصنيف بند عدّله المستخدم باسم آخر) */
+const AUTO_SUBS = (function(){ const x={'بنود عامة':1,'ألعاب أطفال':1,'معدات رياضية':1,'هدم وإزالة':1,'حفر وردم':1,'خرسانة وتسليح':1,'أبواب ونوافذ':1,'أرضيات':1,'حوائط وكسوة':1,'أسقف':1,'دهانات وتشطيبات':1,'تمديدات كهربائية':1,'إنارة':1,'تكييف وتهوية':1,'تغذية وصرف':1,'عزل':1,'حدائق وري':1,'مكافحة الحريق':1};
+  SUB_RULES_AR.concat(SUB_RULES_EN).forEach(r=>{x[r[0]]=1;}); return x; })();
+/** التصنيف الفرعي لبند بحسب طبيعته: الباب (للألعاب) ثم الوصف العربي ثم الإنجليزي */
+function classifyItem_(chName, desc, detail){
+  const text=String(desc||'')+' '+String(detail||'');
+  if(/العاب|ألعاب|ملاعب/.test(String(chName))){
+    return /fitness|gym|exercise|sport|basketball|football|tennis|volley|goal post|treadmill|رياض/i.test(text) ? 'معدات رياضية' : 'ألعاب أطفال';
+  }
+  const ar=SUB_RULES_AR.find(r=>r[1].test(text)); if(ar) return ar[0];
+  const en=SUB_RULES_EN.find(r=>r[1].test(text)); return en?en[0]:'بنود عامة';
 }
+function classify_(name,desc){ return classifyItem_(name,desc,''); }
 
 /** استيراد من تبويب "جدول وصف البنود واسعارها" بعد رفع ملف المستخدم إلى Google Sheets — يُشغَّل من المحرر */
 function importOriginal(){
@@ -377,22 +425,30 @@ function unnumberedFromSource_(){
   }
   return out;
 }
-/** تصنيف فرعي للبند غير المرقّم بحسب طبيعته (أوصاف عربية أو إنجليزية) */
-function classifyUn_(chName, desc, detail){
-  const text=String(chName)+' '+String(desc)+' '+String(detail||'');
-  if(/العاب|ألعاب|ملاعب/.test(chName)){
-    return /fitness|gym|exercise|sport|basketball|football|tennis|volley|court|goal|treadmill|رياض/i.test(text) ? 'معدات رياضية' : 'ألعاب أطفال';
-  }
-  const ar=classify_(chName, desc);
-  if(ar!=='بنود عامة') return ar;
-  const en=[[/light|lamp|led\b|luminaire|bulb|spot|flood/i,'إنارة'],[/cable|wire|conduit|tray|silicone|xlpe/i,'كابلات وتمديدات'],
-    [/pump|valve|pipe|fitting|sanitary|water/i,'مضخات وتمديدات مياه'],[/paint|coating|primer/i,'دهانات'],
-    [/door|window|glass|aluminium|aluminum/i,'أبواب ونوافذ'],[/tile|floor|carpet|marble|granite|turf|rubber/i,'أرضيات'],
-    [/air.?condition|hvac|duct|chiller|fan\b/i,'تكييف وتهوية'],[/fire|alarm|sprinkler/i,'مكافحة الحريق'],
-    [/bench|table|chair|bin\b|shade|canopy|furniture/i,'أثاث وتجهيزات']];
-  const hit=en.find(x=>x[0].test(text));
-  return hit?hit[1]:'بنود عامة';
+
+/** إعادة تصنيف الدليل بحسب طبيعة البنود (يغيّر عمود «التصنيف الفرعي» فقط، ولا يلمس ما عدّله المستخدم باسم آخر) */
+function reclassifyCatalog(){
+  adminOnly_();
+  return locked_(()=>{
+    const sh=tab_(S.CAT), v=sh.getDataRange().getValues();
+    if(v.length<2) return {changed:0,total:0};
+    const col=[]; let changed=0, total=0;
+    for(let i=1;i<v.length;i++){
+      const cur=String(v[i][3]||'');
+      if(!v[i][0]){ col.push([cur]); continue; }
+      total++;
+      if(!cur || AUTO_SUBS[cur]){
+        const nv=classifyItem_(v[i][2], v[i][5], v[i][6]);
+        if(nv!==cur){ changed++; col.push([nv]); continue; }
+      }
+      col.push([cur]);
+    }
+    if(changed) sh.getRange(2,4,col.length,1).setValues(col);
+    log_('إعادة تصنيف الدليل','عدد البنود المعدّلة: '+changed);
+    return {changed:changed,total:total};
+  });
 }
+
 /** الرقم الرئيسي الذي يحمله رقم بند موجود: «س/باب» ← س ، «ف/س/باب» ← س ، وإلا -1 */
 function mainNoOf_(code, chNo){
   const p=String(code||'').split('/');
@@ -440,7 +496,7 @@ function importUnnumbered_(){
         g.count++;
         const code = multi ? (g.count+'/'+main+'/'+chNo) : (main+'/'+chNo);
         const chapter = chName[chNo] || x.chName;
-        const sub = classifyUn_(chapter, x.desc, x.detail);
+        const sub = classifyItem_(chapter, x.desc, x.detail);
         rows.push([id_(), chNo, safe_(chapter), safe_(sub), code, safe_(x.desc), safe_(x.detail), safe_(x.unit), x.price, true]);
         perChapter[chapter]=(perChapter[chapter]||0)+1;
         bySub[chapter+' ← '+sub]=(bySub[chapter+' ← '+sub]||0)+1;
@@ -460,7 +516,7 @@ function catalogAll_(){
   return rows_(S.CAT).map(r=>({
     id:String(r[0]), chapter:String(r[2]), sub:String(r[3]||'بنود عامة'),
     code:formatItemCode_(r[4]), description:String(r[5]), detail:String(r[6]||''),
-    unit:String(r[7]||''), price:Number(r[8])||0, active:r[9]!==false
+    unit:String(r[7]||''), price:Number(r[8])||0, active:r[9]!==false, method:String(r[10]||'')
   }));
 }
 function catalog(){ guard_(); return catalogAll_().filter(x=>x.active); }
@@ -477,7 +533,9 @@ function saveCatalogItem(item){
     const row=[id, i>0?v[i][1]:'',                       // الحفاظ على رقم الباب الأصلي
                safe_(item.chapter), safe_(item.sub)||classify_(item.chapter,item.description),
                clean_(item.code), safe_(item.description), safe_(item.detail), safe_(item.unit),
-               number_(item.price||0), i>0 ? v[i][9]!==false : true];   // الحفاظ على حالة التفعيل
+               number_(item.price||0), i>0 ? v[i][9]!==false : true,   // الحفاظ على حالة التفعيل
+               safe_(item.method)];
+    if(!clean_(v[0][10])) sh.getRange(1,11).setValue('طريقة التنفيذ');
     writeRows_(sh, i>0?i+1:nextRow_(sh), [row], TEXT_COLS.CAT);
     log_(i>0?'تعديل بند بالدليل':'إضافة بند للدليل', item.code);
     return id;
@@ -913,7 +971,7 @@ const API_ = {
   listExpenses:listExpenses, saveExpense:saveExpense, removeExpense:removeExpense,
   listPayments:listPayments, savePayment:savePayment, removePayment:removePayment,
   listContracts:listContracts, uploadContract:uploadContract, removeContract:removeContract,
-  projectAccounts:projectAccounts, importUnnumbered:importUnnumbered
+  projectAccounts:projectAccounts, importUnnumbered:importUnnumbered, reclassifyCatalog:reclassifyCatalog
 };
 
 /* ---------- حسابات المشاريع: مصروفات ودفعات وعقود (v3.3) ---------- */

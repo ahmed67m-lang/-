@@ -69,6 +69,16 @@ main{flex:1;padding:24px 26px 60px;max-width:1360px;width:100%;margin:0 auto}
 .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:13px}
 
+/* الشاشة الرئيسية */
+.home-hero{margin:4px 0 18px}
+.home-hello{font-size:20px;font-weight:900;color:var(--navy)}
+.home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
+.home-tile{background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px 14px 20px;text-align:center;cursor:pointer;font-family:inherit;color:var(--navy2);box-shadow:var(--shadow);transition:transform .18s,box-shadow .18s,border-color .18s}
+.home-tile:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(20,45,75,.16);border-color:var(--navy3)}
+.home-tile .ic-badge{width:78px;height:78px;border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:40px;margin:0 auto 14px;color:#fff;box-shadow:0 6px 14px rgba(20,45,75,.2)}
+.home-tile b{display:block;font-size:16px;font-weight:800}
+.home-tile small{display:block;margin-top:7px;color:var(--muted);font-size:12px;font-weight:600;line-height:1.6}
+
 /* أيقونات الأعمال */
 .tile{border:1px solid var(--line);background:#fff;padding:20px 12px;cursor:pointer;border-radius:12px;text-align:center;min-height:104px;font-weight:700;color:var(--navy2);transition:transform .18s,box-shadow .18s,border-color .18s;font-family:inherit;font-size:13.5px}
 .tile:hover{background:#f4f8fd;border-color:var(--gold2);transform:translateY(-3px);box-shadow:0 8px 22px rgba(21,61,108,.12)}
@@ -152,7 +162,15 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
 .picker-trigger{width:100%;background:#fff;border:1px solid #c9d5e4;border-radius:9px;padding:10px 12px;text-align:right;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;font-weight:600;cursor:pointer;line-height:1.6;color:var(--ink)}
 .picker-trigger:hover{border-color:var(--navy3)}
 .picker-trigger .chosen{flex:1;min-width:0;white-space:pre-line;overflow-wrap:anywhere;max-height:260px;overflow-y:auto}
-.picker-menu{max-height:420px!important}
+.picker-menu{max-height:420px!important;right:0;left:auto;width:62%}
+.picker-tip{position:absolute;top:calc(100% + 4px);left:0;width:calc(38% - 10px);max-height:420px;overflow-y:auto;z-index:61;background:#fff3cf;border:2px solid #e0b43f;border-radius:12px;padding:13px 14px;box-shadow:0 12px 30px rgba(120,86,0,.22);font-size:12.5px;line-height:1.85;color:#4a3a08;white-space:pre-line;overflow-wrap:anywhere}
+.picker-tip h4{margin:0 0 3px;font-size:12px;color:#8a6200;font-weight:800}
+.picker-tip .tip-sec{margin-bottom:10px}
+.picker-tip .tip-meta{display:flex;gap:8px;flex-wrap:wrap;white-space:normal}
+.picker-tip .tip-meta span{background:#fff;border:1px solid #e3c870;border-radius:8px;padding:2px 9px;font-weight:700}
+.picker-tip .tip-none{color:#8a7a45;font-style:italic}
+.picker-opt:hover,.picker-opt:focus{background:#fff3cf!important;outline:none}
+@media(max-width:900px){.picker-menu{width:100%}.picker-tip{position:fixed;left:10px;right:10px;bottom:10px;top:auto;width:auto;max-height:38vh}}
 #itemDesc{white-space:pre-line;overflow-wrap:anywhere}
 .picker-menu{position:absolute;top:calc(100% + 4px);right:0;left:0;z-index:60;max-height:330px;overflow-y:auto;background:#fff;border:1px solid #b7c9df;border-radius:10px;box-shadow:0 12px 30px rgba(20,45,75,.18);padding:4px}
 .picker-opt{display:block;width:100%;text-align:right;background:#fff;color:var(--ink);border:0;border-bottom:1px solid #eef2f7;border-radius:6px;padding:9px 10px;font-size:12.5px;line-height:1.65;white-space:pre-line;overflow-wrap:anywhere;cursor:pointer}
@@ -301,7 +319,8 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
       <div class="sub">نظام المقايسات والتسعير v3.4</div>
     </div>
     <nav class="side-nav" id="sideNav">
-      <button class="nav-item active" data-view="dashboard"><span class="ic">📊</span><span class="nav-label">لوحة التحكم</span></button>
+      <button class="nav-item active" data-view="home"><span class="ic">🏠</span><span class="nav-label">الرئيسية</span></button>
+      <button class="nav-item" data-view="dashboard"><span class="ic">📊</span><span class="nav-label">لوحة التحكم</span></button>
       <button class="nav-item" data-view="projects"><span class="ic">🏗️</span><span class="nav-label">المشروعات</span></button>
       <button class="nav-item" data-view="pricing"><span class="ic">🧮</span><span class="nav-label">التسعير والمقايسة</span></button>
       <button class="nav-item" data-view="accounts"><span class="ic">💰</span><span class="nav-label">حسابات المشروع</span></button>
@@ -316,7 +335,7 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
   <div id="main">
     <header id="topbar">
       <button class="btn secondary sm hidden" id="btnBackTop" onclick="goBack()">↩ رجوع</button>
-      <h2 id="viewTitle">لوحة التحكم</h2>
+      <h2 id="viewTitle">الشاشة الرئيسية</h2>
       <div class="spacer"></div>
       <div class="topbar-project">
         <label style="margin:0;font-size:12px">المشروع الحالي:</label>
@@ -327,7 +346,11 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
 
     <main>
       <!-- لوحة التحكم -->
-      <section id="view-dashboard" class="view">
+      <section id="view-home" class="view">
+        <div class="home-hero"><div class="home-hello">أهلاً بك في نظام المقايسات والتسعير</div><div class="muted" id="homeSub"></div></div>
+        <div class="home-grid" id="homeGrid"></div>
+      </section>
+      <section id="view-dashboard" class="view hidden">
         <div class="kpi-row" id="kpiRow"></div>
         <div class="charts-row">
           <div class="card"><h3 class="card-title"><span class="dot"></span>توزيع بنود الدليل حسب الأبواب</h3><div class="chart-box"><canvas id="chartChapters"></canvas></div></div>
@@ -380,6 +403,7 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
                   <span class="chosen" id="pickerLabel">اختر البند...</span><span>▼</span>
                 </button>
                 <div id="pickerMenu" class="picker-menu hidden" role="listbox"></div>
+                <div id="pickerTip" class="picker-tip hidden"></div>
               </div>
               <div id="itemDesc" class="muted" style="font-size:12.5px;margin-top:8px;line-height:1.8"></div>
 
@@ -497,7 +521,7 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
       <section id="view-catalog" class="view hidden">
         <div class="card">
           <h3 class="card-title"><span class="dot"></span>دليل البنود</h3>
-          <div class="toolbar admin-only" id="unnumBar"><button class="btn gold sm" id="btnImportUnnum" onclick="importUnnumberedUI()">📥 استيراد البنود غير المرقمة وتصنيفها وترقيمها</button><span class="muted" style="font-size:12px">تُضاف داخل أبوابها الأصلية بتصنيف فرعي بحسب طبيعتها وترقيم رئيسي وفرعي، ولا يتكرر ما أُضيف من قبل</span></div>
+          <div class="toolbar admin-only" id="unnumBar"><button class="btn gold sm" id="btnImportUnnum" onclick="importUnnumberedUI()">📥 استيراد البنود غير المرقمة وتصنيفها وترقيمها</button><button class="btn secondary sm" id="btnReclass" onclick="reclassifyUI()">🔄 إعادة تصنيف البنود بحسب طبيعتها</button><span class="muted" style="font-size:12px">تُضاف داخل أبوابها الأصلية بتصنيف فرعي بحسب طبيعتها وترقيم رئيسي وفرعي، ولا يتكرر ما أُضيف من قبل</span></div>
           <div class="crumb" id="catCrumb">اختر باب الأعمال بالضغط على أيقونته</div>
           <div id="catChaptersGrid" class="grid"></div>
           <div id="catSubsGrid" class="grid hidden"></div>
@@ -609,7 +633,7 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
 /* ============================== النواة والحالة ============================== */
 const $=id=>document.getElementById(id);
 const state={projects:[],catalog:[],catalogAll:[],lines:[],accounts:null,projectId:'',settings:{},defaults:{},stats:null,
-             chapter:'',sub:'',catChapter:'',catSub:'',editLineId:'',costMode:'bd',view:'dashboard',token:'',user:null,users:[]};
+             chapter:'',sub:'',catChapter:'',catSub:'',editLineId:'',costMode:'bd',view:'home',token:'',user:null,users:[]};
 const STATUS_LIST=['مسودة','قيد التسعير','معتمد','قيد التنفيذ','منفذ','ملغي'];
 const EXPENSE_CATS=['مواد','عمالة','معدات','تشغيل','مقاول باطن','أخرى'];
 const fmt=n=>Number(n||0).toLocaleString('en-US',{minimumFractionDigits:3,maximumFractionDigits:3});
@@ -678,7 +702,7 @@ function confirmDialog(messageHTML,okText,danger,cancelText){
 }
 
 /* --------------------- التنقل بين الشاشات مع زر الرجوع ---------------------- */
-const VIEW_TITLES={dashboard:'لوحة التحكم',projects:'إدارة المشروعات',pricing:'التسعير والمقايسة',accounts:'حسابات المشروع',catalog:'دليل البنود',reports:'التقارير والطباعة',settings:'الإعدادات',preview:'معاينة الطباعة'};
+const VIEW_TITLES={home:'الشاشة الرئيسية',dashboard:'لوحة التحكم',projects:'إدارة المشروعات',pricing:'التسعير والمقايسة',accounts:'حسابات المشروع',catalog:'دليل البنود',reports:'التقارير والطباعة',settings:'الإعدادات',preview:'معاينة الطباعة'};
 let navStack=[];
 function switchView(v,noPush){
   if(!noPush&&state.view!==v) navStack.push(state.view);
@@ -690,6 +714,7 @@ function switchView(v,noPush){
   $('viewTitle').textContent=VIEW_TITLES[v]||'';
   updateBackBtn();
   window.scrollTo({top:0});
+  if(v==='home')renderHome();
   if(v==='dashboard')renderDashboard();
   if(v==='projects')renderProjectsTable();
   if(v==='pricing')renderPricing();
@@ -700,10 +725,10 @@ function switchView(v,noPush){
 }
 function goBack(){
   const prev=navStack.pop();
-  if(prev) switchView(prev,true); else switchView('dashboard',true);
+  if(prev) switchView(prev,true); else switchView('home',true);
   updateBackBtn();
 }
-function updateBackBtn(){ $('btnBackTop').classList.toggle('hidden',!navStack.length); }
+function updateBackBtn(){ $('btnBackTop').classList.toggle('hidden',state.view==='home'); }
 document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>switchView(b.dataset.view)));
 
 /* --------------------------------- التحميل --------------------------------- */
@@ -715,6 +740,30 @@ function importUnnumberedUI(){
     state.catChapter=''; state.catSub=''; renderCatalogView();
     toast(r.added?('تمت إضافة '+r.added+' بند داخل أبوابها وتصنيفاتها'+(r.skipped?(' — تم تخطي '+r.skipped+' مكرر'):'')):'لا توجد بنود جديدة — كل البنود غير المرقمة مضافة مسبقاً','ok');
   })();
+}
+function reclassifyUI(){
+  withBusy($('btnReclass'),async()=>{
+    const r=await api('reclassifyCatalog');
+    await reloadCatalog();
+    state.catChapter=''; state.catSub=''; renderCatalogView();
+    toast(r.changed?('تمت إعادة تصنيف '+r.changed+' بند من أصل '+r.total):'التصنيف مطابق لطبيعة البنود — لا تغييرات','ok');
+  })();
+}
+/* ------------------------- الشاشة الرئيسية بالأيقونات ------------------------ */
+function renderHome(){
+  const st=state.stats||{}, pc=st.projectsCount!==undefined?st.projectsCount:state.projects.length;
+  const tiles=[
+    ['📊','#173b70','لوحة التحكم','مؤشرات ورسوم بيانية عن المشاريع والتكاليف',"switchView('dashboard')"],
+    ['🏗️','#1f6f8b','المشاريع الحالية',pc+' مشروع مسجل',"switchView('projects')"],
+    ['➕','#2e8b57','مشروع جديد','إنشاء مشروع ومقايسة جديدة',"switchView('projects');openProjectModal()"],
+    ['🧮','#8c5b7b','التسعير والمقايسة','اختيار البنود وتسعيرها داخل المشروع',"switchView('pricing')"],
+    ['📚','#b48a40','بنود الأعمال',state.catalog.length+' بند في '+new Set(state.catalog.map(x=>x.chapter)).size+' باباً',"switchView('catalog')"],
+    ['💰','#3e7d6e','حسابات المشاريع','الدفعات والمصروفات ونسخة العقد',"switchView('accounts')"],
+    ['🖨️','#4a6fa5','التقارير والطباعة','مقايسة وتقرير تكلفة بمعاينة قابلة للتعديل',"switchView('reports')"],
+    ['⚙️','#6b7280','الإعدادات','بيانات الشركة والمستخدمون والنسب',"switchView('settings')"]
+  ];
+  $('homeGrid').innerHTML=tiles.map(t=>'<button class="home-tile" onclick="'+t[4]+'"><span class="ic-badge" style="background:'+t[1]+'">'+t[0]+'</span><b>'+t[2]+'</b><small>'+t[3]+'</small></button>').join('');
+  $('homeSub').textContent=state.user?('المستخدم: '+state.user.username):'';
 }
 async function reloadCatalog(){ setCatalog(await api('catalogAll')); }
 async function reloadLines(){
@@ -794,7 +843,7 @@ async function loadApp(){
     applyRole();
     renderGlobalProjects();
     fillStatusFilters();
-    switchView('dashboard',true);
+    switchView('home',true);
     $('splash').classList.add('hidden'); $('login').classList.add('hidden');
     $('app').classList.remove('hidden');
   }catch(e){
@@ -843,36 +892,35 @@ function fillStatusFilters(){
 }
 function curProject(){ return state.projects.find(p=>p.id===state.projectId)||null; }
 
-/* --------------------- نظام أيقونات الأعمال المميزة ------------------------ */
-const ICON_MAP=[
- [/العاب|ألعاب|ملاعب|playground/,'🎠'],[/رياض|sport|fitness/,'🏀'],[/lighting|light\b|led\b/,'💡'],[/pipes|cable|wire/,'🔌'],
- [/power distribution|switchgear|distribution panel/,'🎛️'],[/low voltage|telephone|cctv|intercom|data network/,'📡'],[/electrical|motor|generator|machine/,'⚡'],[/site furniture|furniture|bench/,'🪑'],
- [/دورات المياه|حمام/,'🚻'],[/الاجهزة|الأجهزة|الادوات|الأدوات الصحية/,'🚿'],[/مظلات|مظلة/,'⛱️'],
- [/هدم|إزال|ازال|تكسير/,'🧨'],[/حفر|ردم|دفان|تربة|مساحة|تسوية|ميول/,'⛏️'],
- [/خرسان|تسليح|أساس|قواعد|أعمدة|أسمنت|اسمنت|مسلح|سقايل|سقالات|هيكل/,'🏗️'],
- [/مباني|طوب|بلوك|بناء/,'🧱'],
- [/لياسه|لياسة|محارة|مليس|بياض/,'🪣'],[/عزل|رطوبة/,'🛡️'],
- [/أرض|بلاط|سيراميك|رخام|جرانيت|بورسلان|بورسلين|موزاييك|باركيه|إنترلوك|انترلوك/,'🟫'],
- [/دهان|صبغ|طلاء|معجون|بويه|بوية|ديكور/,'🎨'],[/جبس|سقف|أسقف|سقوف/,'🏠'],
- [/باب|أبواب|نوافذ|نافذ|شباك|المنيوم|ألومنيوم|زجاج|واجهات|كرتين|درابزين|شتر/,'🪟'],
- [/كهرب|كابل|كيبل|أسلاك|مفتاح|مقبس|لوحات|قواطع|مولد|محول/,'🔌'],[/إنار|إضاء|لمبة|كشاف|ثريا/,'💡'],
- [/سباك|صحي|صرف|مياه|مواسير|أنبوب|خلاط|مغسل|مرحاض|تغذية|خزان|مضخ/,'🚰'],
- [/تكييف|تبريد|مكيف|دكت|تهوية|فريون|شيلر|مروحة|مراوح/,'❄️'],[/حريق|إطفاء|اطفاء|رشاش|إنذار|انذار/,'🧯'],
- [/مصاعد|مصعد/,'🛗'],[/حدائق|زراع|ري |نبات|نخيل|تنسيق|لاندسكيب/,'🌿'],
- [/طرق|أسفلت|اسفلت|كربستون|أرصفة|ارصفة|كيوبستون/,'🛣️'],
- [/حديد|حداد|معدن|ستانلس|مظلات|هناجر|شينكو|أبواب سحاب/,'⚙️'],
- [/نجار|نجارة|خشب|أثاث|اثاث|مطابخ|دولاب|دواليب/,'🪵'],
- [/نقل|مخلفات|معدات|تأجير|سقالة/,'🚜'],[/مسابح|مسبح|نوافير|شلالات|جاكوزي/,'🏊'],
- [/كاميرات|مراقبة|شبكات|اتصالات|دش|سمارت|إنتركم|سنترال/,'📡'],
- [/تنظيف|تلميع|مكافحة|حشرات/,'🧽'],[/مظهر|تجميل|تشجير/,'🌳'],
- [/مقاولات|بنود عامة|متفرقات|متنوع/,'🏢']
+/* --------------------- نظام أيقونات الأبواب والتصنيفات (هندسي/معماري) ------------------------ */
+const ICON_RULES=[
+ [/العاب|ملاعب|playground/,'🎠'],[/معدات رياضيه|رياض|sport|fitness/,'🏀'],
+ [/تحت الماء/,'🌊'],[/ديكوري/,'✨'],[/الاحجار|احجار/,'🪨'],[/خارجيه|اعمده/,'🔦'],[/داخليه/,'🪔'],
+ [/محولات|انظمه تحكم/,'🎛️'],
+ [/mist|رذاذ/,'🌫️'],[/نوافير/,'⛲'],[/امطار/,'🌧️'],
+ [/التحكم بشبكه المياه|تغذيه/,'🚰'],[/التحكم/,'🎛️'],
+ [/(^|\s)(ال)?ري(\s|$)|شبكه الري|تنقيط|رشاش/,'💦'],[/زراع|نبات|نخيل|عشب|شجر|حدائق|landscape/,'🌳'],
+ [/الاطفاء|اطفاء|حريق|مكافحه/,'🧯'],[/التكييف|تكييف|تبريد|تهويه|hvac|duct/,'❄️'],
+ [/المصدات|bollard/,'🚧'],[/دورات|حمام/,'🚻'],[/الاجهزه|الادوات الصحيه|ادوات صحيه/,'🚿'],[/الصرف|صرف/,'🕳️'],
+ [/المنجور|منجور|نجار|خشب/,'🪚'],[/دهان|طلاء|صبغ/,'🎨'],[/الزجاج|زجاج/,'🪟'],[/الومنيوم|ابواب|نوافذ|باب/,'🚪'],
+ [/site furniture|furniture|اثاث/,'🪑'],[/الطبقات العازله|عزل|رطوبه/,'🛡️'],[/المظلات|مظل/,'⛱️'],
+ [/العمال|الفنيين/,'👷'],[/السيارات|المعدات/,'🚜'],
+ [/power distribution|لوحات|panel|switchgear|قواطع/,'🗄️'],[/سخان|heater/,'🔥'],
+ [/pipes|cable|cebles|wire|كابل|مواسير|تمديدات/,'🔌'],[/lighting|انار|اضاء|light/,'💡'],
+ [/electrical machine|ماكينات|ماكينه/,'⚡'],[/low voltage|تيار خفيف|اتصالات|cctv/,'📡'],
+ [/المخططات|مخطط|drawing/,'📐'],[/المساح|مساحه|survey/,'🧭'],
+ [/هدم|ازاله|تكسير|(^|\s)فك/,'🏚️'],[/الترابيه|حفر|ردم|تربه/,'⛏️'],[/الحديد|حديد|معادن|ستانلس/,'🔩'],
+ [/الاسقف الزائفه|زائفه|جبس/,'🔲'],[/اسقف|سقف|تغطيه/,'🏠'],[/الارضيات|ارضي|بلاط|سيراميك|رخام/,'🟫'],
+ [/الحوائط|حوائط|جدار|كسوه/,'🏛️'],[/الخرسانه|خرسان|تسليح/,'🏗️'],[/البناء|مباني|بلوك|طوب|بياض/,'🧱'],
+ [/التركيب/,'🔧'],[/عامه/,'📋']
 ];
-const ICON_POOL=['🏗️','🧱','🔨','🪚','🔧','🛠️','🪛','⚙️','🧰','🪜','🚜','🚧','🪵','🪟','💡','🔌','🚰','❄️','🧯','🌿','🪣','🧹'];
+const ICON_POOL=['🏗️','🧱','🔨','🪚','🔧','🛠️','🪛','⚙️','🧰','🪜','🚧','🪟','💡','🔌','🚰'];
 const ICON_COLORS=['#173b70','#b48a40','#1f6f8b','#6b8f71','#8c5b7b','#c98a3d','#4a6fa5','#96613d','#7a7a52','#3e7d6e','#8a4d5e','#5b6b9e'];
+function normAr(t){ return String(t==null?'':t).toLowerCase().replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/ـ/g,'').replace(/\s+/g,' '); }
 function hashStr(s){ let h=0; const t=String(s); for(let i=0;i<t.length;i++){ h=(h*31+t.charCodeAt(i))>>>0; } return h; }
 function iconFor(t){
-  const x=String(t||'').toLowerCase();
-  const hit=ICON_MAP.find(i=>i[0].test(x));
+  const x=normAr(t);
+  const hit=ICON_RULES.find(i=>i[0].test(x));
   return hit?hit[1]:ICON_POOL[hashStr(x)%ICON_POOL.length];
 }
 function iconColor(t){ return ICON_COLORS[hashStr(String(t||''))%ICON_COLORS.length]; }
@@ -1068,13 +1116,26 @@ function openSub(s){
   renderItems();
 }
 function backSubs(){ if(state.chapter) openChapter(state.chapter); }
-function closePicker(){ $('pickerMenu').classList.add('hidden'); $('pickerTrigger').setAttribute('aria-expanded','false'); }
+function showTip(x){
+  const sec=(t,v)=>'<div class="tip-sec"><h4>'+t+'</h4>'+v+'</div>';
+  const none='<span class="tip-none">لم تُسجَّل بعد</span>';
+  $('pickerTip').innerHTML=
+    sec('📝 الوصف التفصيلي للبند','<b>'+esc(x.code)+'</b> — '+esc(x.description))+
+    sec('🔎 التفاصيل / المواصفات',x.detail?esc(x.detail):none)+
+    sec('🛠️ طريقة التنفيذ',x.method?esc(x.method):none)+
+    '<div class="tip-meta"><span>الوحدة: '+esc(x.unit||'—')+'</span><span>السعر الاسترشادي: '+fmt(x.price)+' د.ك</span><span>'+esc(x.sub)+'</span></div>';
+  $('pickerTip').classList.remove('hidden');
+}
+function hideTip(){ const t=$('pickerTip'); if(t) t.classList.add('hidden'); }
+document.addEventListener('mouseleave',hideTip);
+function closePicker(){ hideTip(); $('pickerMenu').classList.add('hidden'); $('pickerTrigger').setAttribute('aria-expanded','false'); }
 function togglePicker(){
   const m=$('pickerMenu'), opening=m.classList.contains('hidden');
   m.classList.toggle('hidden',!opening);
   $('pickerTrigger').setAttribute('aria-expanded',String(opening));
 }
 document.addEventListener('click',e=>{ if(!e.target.closest('#itemPicker')) closePicker(); });
+document.addEventListener('mouseover',e=>{ if(!e.target.closest('#pickerMenu')&&!e.target.closest('#pickerTip')) hideTip(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closePicker(); closeModal(); } });
 function renderItems(){
   const q=($('itemSearch').value||'').toLowerCase();
@@ -1090,6 +1151,7 @@ function renderItems(){
     b.type='button'; b.className='picker-opt'; b.dataset.itemId=x.id; b.setAttribute('role','option');
     b.textContent=x.code+' — '+x.description+(x.detail?'\n↳ '+x.detail:'');
     b.addEventListener('click',()=>{ pickItem(x.id); });
+    b.addEventListener('mouseenter',()=>showTip(x)); b.addEventListener('focus',()=>showTip(x));
     menu.appendChild(b);
   });
   $('pickerLabel').textContent='اختر البند...';
@@ -1342,13 +1404,14 @@ function openItemModal(id){
     '<div><label>السعر الاسترشادي (د.ك)</label><input id="mIPrice" type="number" min="0" step="any" value="'+(x?x.price:'')+'"></div>'+
     '<div class="full"><label>وصف البند *</label><textarea id="mIDesc" rows="2">'+esc(x?x.description:'')+'</textarea></div>'+
     '<div class="full"><label>الوصف الفرعي / التفاصيل</label><textarea id="mIDetail" rows="2">'+esc(x?x.detail:'')+'</textarea></div>'+
+    '<div class="full"><label>🛠️ طريقة التنفيذ (تظهر عند تمرير الماوس على البند)</label><textarea id="mIMethod" rows="3">'+esc(x?x.method:'')+'</textarea></div>'+
     '</div>',
     '<button class="btn" id="mISave">حفظ البند</button><button class="btn secondary" onclick="closeModal()">إلغاء</button>');
   $('mISave').onclick=withBusy($('mISave'),async()=>{
     if(!$('mICode').value.trim()||!$('mIDesc').value.trim()||!$('mIChapter').value.trim()){ toast('أدخل رقم البند والباب والوصف','err'); return; }
     const payloadI={code:$('mICode').value,chapter:$('mIChapter').value,
       sub:$('mISub').value,unit:$('mIUnit').value,price:$('mIPrice').value||0,
-      description:$('mIDesc').value,detail:$('mIDetail').value};
+      description:$('mIDesc').value,detail:$('mIDetail').value,method:$('mIMethod').value};
     if(x) payloadI.id=x.id;
     await api('saveCatalogItem',payloadI);
     await reloadCatalog();
