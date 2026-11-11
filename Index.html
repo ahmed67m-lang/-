@@ -107,6 +107,21 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
 .badge.محصلة{background:var(--green-bg);color:var(--green)}
 .badge.مستحقة{background:var(--amber-bg);color:var(--amber)}
 .badge.cat{background:var(--blue-bg);color:#1f4d8c}
+.chip.click{cursor:pointer;transition:transform .12s,box-shadow .12s;position:relative}
+.chip.click:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(18,52,94,.16)}
+.chip.click.sel{outline:3px solid var(--gold,#c9a24b);outline-offset:1px}
+.chip.click .c-more{position:absolute;left:8px;top:6px;font-size:11px;opacity:.55}
+.acc-detail{background:#fffdf6;border:1px solid #e6d9b0;border-radius:12px;padding:14px 16px;margin:4px 0 14px}
+.acc-detail h4{margin:0 0 10px;font-size:15px;color:var(--navy);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.acc-alert{border-radius:10px;padding:10px 14px;margin:0 0 12px;font-weight:700;font-size:13px}
+.acc-alert.bad{background:var(--red-bg);border:1px solid #e5a5a0;color:var(--red)}
+.acc-alert.ok{background:var(--green-bg);border:1px solid #a9d8c2;color:var(--green)}
+.badge.متأخرة{background:var(--red-bg);color:var(--red)}
+.badge.مسددة{background:var(--green-bg);color:var(--green)}
+.badge.جزئية{background:var(--amber-bg);color:var(--amber)}
+tr.late td{background:#fff3f2}
+.num.neg{color:var(--red)}
+
 
 /* مؤشرات لوحة التحكم */
 .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:14px;margin-bottom:20px}
@@ -316,7 +331,7 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
     <div class="side-brand">
       <div class="logo">🏗️</div>
       <h1>منارات المتحدة</h1>
-      <div class="sub">نظام المقايسات والتسعير v3.4</div>
+      <div class="sub">نظام المقايسات والتسعير v3.6</div>
     </div>
     <nav class="side-nav" id="sideNav">
       <button class="nav-item active" data-view="home"><span class="ic">🏠</span><span class="nav-label">الرئيسية</span></button>
@@ -475,6 +490,26 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
           <div class="card">
             <h3 class="card-title"><span class="dot"></span>ميزانية المشروع وحساباته <span id="accProjName" class="muted" style="font-weight:600"></span></h3>
             <div class="chips" id="accChips"></div>
+            <div class="muted" style="font-size:11.5px;margin:-6px 0 8px">اضغط على أي مربع لعرض تفاصيله</div>
+            <div id="accAlert"></div>
+            <div id="accDetail" class="acc-detail hidden"></div>
+          </div>
+
+          <div class="card" id="cardSchedule">
+            <h3 class="card-title"><span class="dot"></span>📅 بيان الدفعات المستحقة والمتأخرة</h3>
+            <div class="acc-cats" id="schedChips"></div>
+            <div class="table-wrap"><table><thead><tr><th>تاريخ الاستحقاق</th><th>البيان</th><th>المبلغ (د.ك)</th><th>المسدد (د.ك)</th><th>المتبقي (د.ك)</th><th>الحالة</th></tr></thead><tbody id="schedTbody"></tbody></table></div>
+          </div>
+
+          <div class="card" id="cardStatement">
+            <h3 class="card-title"><span class="dot"></span>🧾 كشف حساب العميل</h3>
+            <div class="toolbar">
+              <button class="btn gold sm" onclick="previewStatement()">👁 معاينة وطباعة الكشف</button>
+              <button class="btn secondary sm" onclick="exportStatementCsv()">⬇ تصدير CSV</button>
+              <span class="muted" style="font-size:12px">مدين = دفعة مستحقة على العميل، دائن = سداد من العميل، والرصيد تراكمي</span>
+            </div>
+            <div class="acc-cats" id="stmtChips"></div>
+            <div class="table-wrap"><table><thead><tr><th>التاريخ</th><th>رقم السند</th><th>نوع الحركة</th><th>البيان</th><th>طريقة الدفع</th><th>مدين</th><th>دائن</th><th>الرصيد</th></tr></thead><tbody id="stmtTbody"></tbody></table></div>
           </div>
 
           <div class="card">
@@ -494,12 +529,16 @@ tfoot td{background:#f0f5fb;font-weight:800;border-top:2px solid #cdd9e8}
             <div class="inline-form">
               <div><label>النوع</label><select id="payType"><option>مستحقة</option><option>محصلة</option></select></div>
               <div><label>المبلغ (د.ك)</label><input id="payAmount" type="number" min="0" step="any"></div>
+              <div><label>تاريخ الحركة</label><input id="payDate" type="date"></div>
+              <div><label>تاريخ الاستحقاق <span class="muted">(للمستحقة)</span></label><input id="payDue" type="date"></div>
               <div style="grid-column:span 2"><label>البيان</label><input id="payDesc" placeholder="مثال: دفعة مقدمة 25% من قيمة العقد"></div>
+              <div><label>طريقة الدفع</label><input id="payMethod" placeholder="نقدي / تحويل / شيك"></div>
+              <div><label>رقم السند</label><input id="payRef" placeholder="REC-001"></div>
               <div><label>ملاحظات</label><input id="payNotes"></div>
               <div><button class="btn" id="btnAddPay" onclick="addPaymentUI()" style="width:100%;justify-content:center">＋ إضافة دفعة</button></div>
             </div>
             <div class="acc-cats" id="payChips"></div>
-            <div class="table-wrap"><table><thead><tr><th>التاريخ</th><th>النوع</th><th>البيان</th><th>المبلغ (د.ك)</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody id="paymentsTbody"></tbody></table></div>
+            <div class="table-wrap"><table><thead><tr><th>التاريخ</th><th>النوع</th><th>البيان</th><th>الاستحقاق</th><th>المبلغ (د.ك)</th><th>السند / الطريقة</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody id="paymentsTbody"></tbody></table></div>
           </div>
 
           <div class="card">
@@ -1446,21 +1485,175 @@ async function renderAccounts(){
     const a=await loadAccounts();
     if(!a) return;
     const acc=a.accounts;
-    $('accChips').innerHTML=[
-      ['قيمة العقد (المقايسة النهائية)', fmt(acc.contractValue)+' د.ك',''],
-      ['تكلفة التنفيذ التقديرية', fmt(a.summary.cost)+' د.ك',''],
-      ['المصروفات الفعلية', fmt(a.expenses.total)+' د.ك', a.expenses.total>a.summary.cost?'red':''],
-      ['المحصَّل من العميل', fmt(a.payments.paid)+' د.ك','green'],
-      ['دفعات مستحقة غير محصلة', fmt(a.payments.due)+' د.ك', a.payments.due>0?'red':''],
-      ['المتبقي على العميل', fmt(acc.outstanding)+' د.ك','']
-    ].map(c=>'<div class="chip '+c[2]+'"><span class="c-label">'+c[0]+'</span><span class="c-value">'+c[1]+'</span></div>').join('')+
-    '<div class="chip hero"><span class="c-label">صافي الربح المتوقع</span><span class="c-value">'+fmt(acc.expectedNet)+' د.ك</span></div>';
+    drawAccChips(a);
+    renderSchedule(a);
+    renderStatement(a);
     renderContracts(a.contracts||[]);
     renderPayments(a.payments);
     renderExpenses(a.expenses);
   }catch(e){
     $('accChips').innerHTML='<div class="chip red"><span class="c-label">خطأ في تحميل الحسابات: '+esc(e.message)+'</span></div>';
   }
+}
+function drawAccChips(a){
+    const acc=a.accounts;
+    const T=[
+      ['contract','قيمة العقد (المقايسة النهائية)', fmt(acc.contractValue)+' د.ك',''],
+      ['cost','تكلفة التنفيذ التقديرية', fmt(a.summary.cost)+' د.ك',''],
+      ['spent','المصروفات الفعلية', fmt(a.expenses.total)+' د.ك', a.expenses.total>a.summary.cost?'red':''],
+      ['paid','المحصَّل من العميل', fmt(a.payments.paid)+' د.ك','green'],
+      ['due','دفعات مستحقة'+(a.overdue.count?' (منها متأخرة)':''), fmt(acc.dueBalance)+' د.ك', a.overdue.count?'red':(acc.dueBalance>0?'red':'')],
+      ['outstanding','المتبقي على العميل', fmt(acc.outstanding)+' د.ك','']
+    ];
+    const sel=state.accTab||'';
+    $('accChips').innerHTML=T.map(c=>'<div class="chip click '+c[3]+(sel===c[0]?' sel':'')+'" role="button" tabindex="0" onclick="accShow('+jsArg(c[0])+')"><span class="c-more">⤢</span><span class="c-label">'+c[1]+'</span><span class="c-value">'+c[2]+'</span></div>').join('')+
+    '<div class="chip click hero'+(sel==='net'?' sel':'')+'" role="button" tabindex="0" onclick="accShow(\'net\')"><span class="c-more">⤢</span><span class="c-label">صافي الربح المتوقع</span><span class="c-value">'+fmt(acc.expectedNet)+' د.ك</span></div>';
+    $('accAlert').innerHTML=a.overdue.count
+      ?'<div class="acc-alert bad">⚠ يوجد '+a.overdue.count+' دفعة متأخرة بإجمالي '+fmt(a.overdue.amount)+' د.ك — أقدمها متأخرة '+a.overdue.maxDays+' يوماً. <a href="#" onclick="accShow(\'due\');return false">عرض التفاصيل</a></div>'
+      :(a.payments.count?'<div class="acc-alert ok">✔ لا توجد دفعات متأخرة'+(a.upcoming.count?' — القادم: '+fmt(a.upcoming.amount)+' د.ك':'')+'</div>':'');
+    renderAccDetail();
+}
+/* ---------------- تفاعل مربعات الحسابات + الاستحقاقات + كشف الحساب ---------- */
+function accShow(key){
+  state.accTab=(state.accTab===key)?'':key;
+  if(state.accounts) drawAccChips(state.accounts); else renderAccounts();
+  const d=$('accDetail'); if(state.accTab&&d) d.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function accClose(){ state.accTab=''; if(state.accounts) drawAccChips(state.accounts); }
+function tdn(v,cls){ return '<td class="num'+(cls?' '+cls:'')+'">'+v+'</td>'; }
+function renderAccDetail(){
+  const box=$('accDetail'), a=state.accounts, k=state.accTab;
+  if(!k||!a){ box.classList.add('hidden'); box.innerHTML=''; return; }
+  const acc=a.accounts, s=a.summary;
+  const head=(t)=>'<h4><span>'+t+'</span><button class="btn sm secondary" onclick="accClose()">✕ إغلاق</button></h4>';
+  let h='';
+  if(k==='contract'){
+    h=head('📑 تفاصيل قيمة العقد — موزعة على أبواب الأعمال')+
+    '<div class="table-wrap"><table><thead><tr><th>الباب</th><th>عدد البنود</th><th>قيمة البيع (د.ك)</th><th>النسبة</th></tr></thead><tbody>'+
+    (a.byChapter.length?a.byChapter.map(c=>'<tr><td>'+esc(c.chapter)+'</td>'+tdn(c.count)+tdn(fmt(c.sales))+tdn(fmtPct(s.sales>0?c.sales/s.sales*100:0)+'%')+'</tr>').join(''):'<tr><td colspan="4" class="empty">لا توجد بنود في المقايسة بعد</td></tr>')+
+    '</tbody></table></div><div class="acc-cats">'+
+    '<span class="acc-cat">إجمالي الأعمال: <b>'+fmt(s.sales)+'</b></span>'+
+    (s.overhead+s.profit>0?'<span class="acc-cat">إضافات (بنود قديمة): <b>'+fmt(s.overhead+s.profit)+'</b></span>':'')+
+    '<span class="acc-cat">الضريبة: <b>'+fmt(s.tax)+'</b></span>'+
+    '<span class="acc-cat" style="background:var(--green-bg)">قيمة العقد: <b>'+fmt(acc.contractValue)+' د.ك</b></span>'+
+    '<span class="acc-cat">لم تُصدر له مطالبة بعد: <b>'+fmt(acc.notYetDue)+'</b></span></div>'+
+    '<div class="toolbar"><button class="btn sm" onclick="switchView(\'pricing\')">فتح التسعير والمقايسة</button></div>';
+  }else if(k==='cost'){
+    h=head('🧮 تكلفة التنفيذ التقديرية مقابل المصروف الفعلي')+
+    '<div class="table-wrap"><table><thead><tr><th>الباب</th><th>عدد البنود</th><th>التكلفة التقديرية (د.ك)</th></tr></thead><tbody>'+
+    a.byChapter.map(c=>'<tr><td>'+esc(c.chapter)+'</td>'+tdn(c.count)+tdn(fmt(c.cost))+'</tr>').join('')+
+    '</tbody></table></div><div class="acc-cats"><span class="acc-cat">التقديرية: <b>'+fmt(s.cost)+'</b></span>'+
+    '<span class="acc-cat">الفعلية حتى الآن: <b>'+fmt(a.expenses.total)+'</b></span>'+
+    '<span class="acc-cat" style="background:'+(acc.costVsSpent>=0?'var(--green-bg)':'var(--red-bg)')+'">'+(acc.costVsSpent>=0?'وفر عن التقدير':'تجاوز للتقدير')+': <b>'+fmt(Math.abs(acc.costVsSpent))+'</b></span></div>';
+  }else if(k==='spent'){
+    h=head('💸 المصروفات الفعلية حسب الفئة')+
+    '<div class="acc-cats">'+EXPENSE_CATS.map(c=>'<span class="acc-cat">'+esc(c)+': <b>'+fmt(a.expenses.byCategory[c]||0)+'</b></span>').join('')+'</div>'+
+    '<div class="table-wrap"><table><thead><tr><th>التاريخ</th><th>الفئة</th><th>البيان</th><th>المبلغ (د.ك)</th></tr></thead><tbody>'+
+    (a.expenses.list.length?a.expenses.list.map(x=>'<tr><td class="num">'+esc(x.date)+'</td><td>'+esc(x.category)+'</td><td>'+esc(x.description)+'</td>'+tdn(fmt(x.amount))+'</tr>').join(''):'<tr><td colspan="4" class="empty">لا مصروفات مسجلة</td></tr>')+
+    '</tbody></table></div><div class="toolbar"><button class="btn sm" onclick="document.getElementById(\'expAmount\').scrollIntoView({behavior:\'smooth\',block:\'center\'});document.getElementById(\'expAmount\').focus()">＋ إضافة مصروف</button></div>';
+  }else if(k==='paid'){
+    const rec=a.payments.list.filter(x=>x.type==='محصلة');
+    h=head('✅ المبالغ المحصَّلة من العميل')+
+    '<div class="table-wrap"><table><thead><tr><th>التاريخ</th><th>رقم السند</th><th>البيان</th><th>طريقة الدفع</th><th>المبلغ (د.ك)</th></tr></thead><tbody>'+
+    (rec.length?rec.map(x=>'<tr><td class="num">'+esc(x.date)+'</td><td>'+esc(x.ref)+'</td><td>'+esc(x.description)+'</td><td>'+esc(x.method)+'</td>'+tdn(fmt(x.amount))+'</tr>').join(''):'<tr><td colspan="5" class="empty">لا توجد مبالغ محصلة بعد</td></tr>')+
+    '</tbody></table></div><div class="acc-cats"><span class="acc-cat">الإجمالي المحصَّل: <b>'+fmt(a.payments.paid)+' د.ك</b></span><span class="acc-cat">نسبة التحصيل من العقد: <b>'+fmtPct(acc.contractValue>0?a.payments.paid/acc.contractValue*100:0)+'%</b></span></div>';
+  }else if(k==='due'){
+    const open=a.schedule.filter(x=>x.status!=='مسددة');
+    h=head('⏰ الدفعات المستحقة والمتأخرة')+
+    '<div class="acc-cats"><span class="acc-cat" style="background:var(--red-bg)">متأخرة: <b>'+a.overdue.count+' / '+fmt(a.overdue.amount)+' د.ك</b></span>'+
+    '<span class="acc-cat">مستحقة قادمة: <b>'+a.upcoming.count+' / '+fmt(a.upcoming.amount)+' د.ك</b></span>'+
+    '<span class="acc-cat">إجمالي المستحق غير المسدد: <b>'+fmt(acc.dueBalance)+' د.ك</b></span></div>'+
+    '<div class="table-wrap"><table><thead><tr><th>الاستحقاق</th><th>البيان</th><th>المتبقي (د.ك)</th><th>الحالة</th></tr></thead><tbody>'+
+    (open.length?open.map(x=>'<tr class="'+(x.status==='متأخرة'?'late':'')+'"><td class="num">'+esc(x.dueDate)+'</td><td>'+esc(x.description)+'</td>'+tdn(fmt(x.remaining))+'<td>'+schedBadge(x)+'</td></tr>').join(''):'<tr><td colspan="4" class="empty">لا توجد دفعات مستحقة مفتوحة</td></tr>')+
+    '</tbody></table></div>';
+  }else if(k==='outstanding'){
+    h=head('📌 المتبقي على العميل')+
+    '<div class="table-wrap"><table class="sumtbl"><tbody>'+
+    '<tr><td>قيمة العقد</td>'+tdn(fmt(acc.contractValue))+'</tr>'+
+    '<tr><td>ناقص: المحصَّل</td>'+tdn(fmt(a.payments.paid))+'</tr>'+
+    '<tr><td><b>المتبقي على العميل</b></td>'+tdn('<b>'+fmt(acc.outstanding)+'</b>')+'</tr>'+
+    '<tr><td>منه: مطالَب به ومستحق</td>'+tdn(fmt(acc.dueBalance))+'</tr>'+
+    '<tr><td>ومنه: لم تُصدر له مطالبة بعد</td>'+tdn(fmt(acc.notYetDue))+'</tr>'+
+    '</tbody></table></div><div class="toolbar"><button class="btn sm gold" onclick="previewStatement()">👁 كشف حساب العميل</button></div>';
+  }else if(k==='net'){
+    h=head('📈 صافي الربح المتوقع')+
+    '<div class="table-wrap"><table class="sumtbl"><tbody>'+
+    '<tr><td>قيمة العقد</td>'+tdn(fmt(acc.contractValue))+'</tr>'+
+    '<tr><td>ناقص: المصروفات الفعلية</td>'+tdn(fmt(a.expenses.total))+'</tr>'+
+    '<tr><td><b>صافي الربح المتوقع (فعلي)</b></td>'+tdn('<b>'+fmt(acc.expectedNet)+'</b>')+'</tr>'+
+    '<tr><td>الربح على التكلفة التقديرية</td>'+tdn(fmt(acc.contractValue-s.cost))+'</tr>'+
+    '<tr><td>السيولة الحالية (المحصَّل − المصروف)</td>'+tdn(fmt(acc.cashPosition),acc.cashPosition<0?'neg':'')+'</tr>'+
+    '</tbody></table></div>';
+  }
+  box.innerHTML=h; box.classList.remove('hidden');
+}
+function schedBadge(x){
+  let t=x.status;
+  if(x.status==='متأخرة') t='متأخرة '+x.daysLate+' يوم';
+  else if((x.status==='مستحقة'||x.status==='جزئية')&&x.daysLeft>0) t=x.status+' بعد '+x.daysLeft+' يوم';
+  return '<span class="badge '+esc(x.status)+'">'+esc(t)+'</span>';
+}
+function renderSchedule(a){
+  $('schedChips').innerHTML=
+    '<span class="acc-cat" style="background:var(--red-bg);border-color:#e5a5a0">متأخرة: <b>'+a.overdue.count+' — '+fmt(a.overdue.amount)+' د.ك</b></span>'+
+    '<span class="acc-cat">مستحقة قادمة: <b>'+a.upcoming.count+' — '+fmt(a.upcoming.amount)+' د.ك</b></span>'+
+    '<span class="acc-cat" style="background:var(--green-bg);border-color:#a9d8c2">مسددة: <b>'+a.schedule.filter(x=>x.status==='مسددة').length+'</b></span>';
+  const order={'متأخرة':0,'جزئية':1,'مستحقة':2,'مسددة':3};
+  const list=a.schedule.slice().sort((x,y)=>(order[x.status]-order[y.status]));
+  $('schedTbody').innerHTML=list.length?list.map(x=>
+    '<tr class="'+(x.status==='متأخرة'?'late':'')+'"><td class="num">'+esc(x.dueDate)+'</td><td>'+esc(x.description)+'</td>'+
+    tdn(fmt(x.amount))+tdn(fmt(x.settled))+tdn(fmt(x.remaining))+'<td>'+schedBadge(x)+'</td></tr>').join('')
+    :'<tr><td colspan="6" class="empty">لا توجد دفعات مستحقة — سجّل دفعة من نوع «مستحقة» مع تاريخ الاستحقاق</td></tr>';
+}
+function renderStatement(a){
+  const st=a.statement, tD=st.reduce((x,r)=>x+r.debit,0), tC=st.reduce((x,r)=>x+r.credit,0);
+  $('stmtChips').innerHTML=
+    '<span class="acc-cat">إجمالي المدين: <b>'+fmt(tD)+'</b></span><span class="acc-cat">إجمالي الدائن: <b>'+fmt(tC)+'</b></span>'+
+    '<span class="acc-cat" style="background:'+(tD-tC>0?'var(--red-bg)':'var(--green-bg)')+'">الرصيد المستحق: <b>'+fmt(tD-tC)+' د.ك</b></span>';
+  $('stmtTbody').innerHTML=st.length?st.map(r=>
+    '<tr><td class="num">'+esc(r.date)+'</td><td>'+esc(r.ref)+'</td><td><span class="badge '+(r.kind==='سداد'?'محصلة':'مستحقة')+'">'+esc(r.kind)+'</span></td>'+
+    '<td>'+esc(r.description)+'</td><td>'+esc(r.method)+'</td>'+
+    tdn(r.debit?fmt(r.debit):'')+tdn(r.credit?fmt(r.credit):'')+tdn('<b>'+fmt(r.balance)+'</b>',r.balance>0?'neg':'')+'</tr>').join('')
+    :'<tr><td colspan="8" class="empty">لا توجد حركات — سجّل الدفعات المستحقة والمحصلة ليظهر الكشف</td></tr>';
+}
+function buildStatementDoc(a){
+  const f=fmt, st=a.statement, p=a.project, acc=a.accounts, c=state.settings||{};
+  const tD=st.reduce((x,r)=>x+r.debit,0), tC=st.reduce((x,r)=>x+r.credit,0);
+  const L='direction:ltr;text-align:left';
+  const rows=st.map(r=>'<tr><td>'+esc(r.date)+'</td><td>'+esc(r.ref)+'</td><td>'+esc(r.kind)+'</td><td>'+esc(r.description)+'</td><td>'+esc(r.method)+'</td>'+
+    '<td style="'+L+'">'+(r.debit?f(r.debit):'')+'</td><td style="'+L+'">'+(r.credit?f(r.credit):'')+'</td><td style="'+L+'"><b>'+f(r.balance)+'</b></td></tr>').join('')||'<tr><td colspan="8">لا توجد حركات</td></tr>';
+  const late=a.schedule.filter(x=>x.status==='متأخرة');
+  const lateRows=late.map(x=>'<tr><td>'+esc(x.dueDate)+'</td><td>'+esc(x.description)+'</td><td style="'+L+'">'+f(x.remaining)+'</td><td>متأخرة '+x.daysLate+' يوم</td></tr>').join('');
+  return pdHead({name:c.name||'',address:c.address||'',phone:c.phone||''},'كشف حساب عميل')+
+    '<h1>كشف حساب عميل — '+esc(p.client)+'</h1>'+
+    '<div class="pd-meta"><div><b>المشروع:</b> '+esc(p.name)+'</div><div><b>العميل:</b> '+esc(p.client)+'</div>'+
+    '<div><b>قيمة العقد:</b> '+f(acc.contractValue)+' د.ك</div><div><b>تاريخ الكشف:</b> '+esc(new Date().toLocaleDateString('en-GB'))+'</div></div>'+
+    '<table><thead><tr><th>التاريخ</th><th>رقم السند</th><th>نوع الحركة</th><th>البيان</th><th>طريقة الدفع</th><th>مدين</th><th>دائن</th><th>الرصيد</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+    '<table class="pd-sum"><tr><td>إجمالي المدين (المستحق)</td><td style="'+L+'">'+f(tD)+'</td></tr>'+
+    '<tr><td>إجمالي الدائن (المسدد)</td><td style="'+L+'">'+f(tC)+'</td></tr>'+
+    '<tr><td>الرصيد المستحق على العميل (د.ك)</td><td style="'+L+'">'+f(tD-tC)+'</td></tr>'+
+    '<tr><td>المتبقي من قيمة العقد (د.ك)</td><td style="'+L+'">'+f(acc.outstanding)+'</td></tr></table>'+
+    (late.length?'<h2 style="font-size:15px;margin:14px 0 6px">الدفعات المتأخرة</h2><table><thead><tr><th>الاستحقاق</th><th>البيان</th><th>المتبقي (د.ك)</th><th>التأخير</th></tr></thead><tbody>'+lateRows+'</tbody></table>':'')+
+    '<div class="pd-foot"><div><b>إعداد</b><div class="pd-sign">المحاسب</div></div><div><b>اعتماد</b><div class="pd-sign">الإدارة</div></div></div>';
+}
+async function previewStatement(){
+  if(!state.projectId){ toast('اختر مشروعاً أولاً','err'); return; }
+  try{
+    const a=state.accounts||await loadAccounts();
+    if(!state.settings||!state.settings.name){ try{ state.settings=await api('companySettings'); }catch(e){} }
+    openPreview(buildStatementDoc(a));
+  }catch(e){ toast(e.message,'err'); }
+}
+function exportStatementCsv(){
+  const a=state.accounts; if(!a){ toast('لا توجد بيانات','err'); return; }
+  const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const rows=[['كشف حساب عميل: '+a.project.client+' — '+a.project.name],[],
+    ['التاريخ','رقم السند','نوع الحركة','البيان','طريقة الدفع','مدين','دائن','الرصيد']]
+    .concat(a.statement.map(r=>[r.date,r.ref,r.kind,r.description,r.method,r.debit||'',r.credit||'',r.balance]));
+  const blob=new Blob(['﻿'+rows.map(r=>r.map(q).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const u=URL.createObjectURL(blob), l=document.createElement('a');
+  l.href=u; l.download='كشف-حساب-'+a.project.client+'.csv'; document.body.appendChild(l); l.click();
+  setTimeout(()=>{URL.revokeObjectURL(u); l.remove();},500);
 }
 /* ------------------------------- العقود ------------------------------------ */
 function renderContracts(list){
@@ -1501,14 +1694,15 @@ async function delContractUI(id){
 function renderPayments(pay){
   $('payChips').innerHTML=
     '<span class="acc-cat">محصَّل: <b>'+fmt(pay.paid)+' د.ك</b></span>'+
-    '<span class="acc-cat">مستحق غير محصَّل: <b>'+fmt(pay.due)+' د.ك</b></span>'+
+    '<span class="acc-cat">إجمالي المستحق (المطالَب به): <b>'+fmt(pay.due)+' د.ك</b></span>'+
     '<span class="acc-cat">عدد الدفعات: <b>'+pay.count+'</b></span>';
   $('paymentsTbody').innerHTML=pay.list.length?pay.list.map(x=>
     '<tr><td class="num">'+esc(x.date)+'</td>'+
     '<td><span class="badge '+esc(x.type)+'">'+esc(x.type)+'</span></td>'+
-    '<td>'+esc(x.description)+'</td><td class="num">'+fmt(x.amount)+'</td><td>'+esc(x.notes)+'</td>'+
+    '<td>'+esc(x.description)+'</td><td class="num">'+esc(x.type==='محصلة'?'':x.dueDate)+'</td><td class="num">'+fmt(x.amount)+'</td>'+
+    '<td>'+esc([x.ref,x.method].filter(Boolean).join(' / '))+'</td><td>'+esc(x.notes)+'</td>'+
     '<td><button class="btn sm danger" onclick="delPaymentUI('+jsArg(x.id)+')">حذف</button></td></tr>').join('')
-    :'<tr><td colspan="6" class="empty">لا توجد دفعات مسجلة — أضف الدفعات المستحقة والمحصلة من العميل</td></tr>';
+    :'<tr><td colspan="8" class="empty">لا توجد دفعات مسجلة — أضف الدفعات المستحقة والمحصلة من العميل</td></tr>';
 }
 function addPaymentUI(){
   withBusy($('btnAddPay'),async()=>{
@@ -1516,8 +1710,9 @@ function addPaymentUI(){
     const amount=num($('payAmount').value);
     if(amount<=0) throw Error('أدخل مبلغاً أكبر من صفر');
     await api('savePayment',{projectId:state.projectId,type:$('payType').value,amount:$('payAmount').value,
-      description:$('payDesc').value,notes:$('payNotes').value});
-    $('payAmount').value=''; $('payDesc').value=''; $('payNotes').value='';
+      description:$('payDesc').value,notes:$('payNotes').value,date:$('payDate').value,
+      dueDate:$('payType').value==='مستحقة'?$('payDue').value:'',method:$('payMethod').value,ref:$('payRef').value});
+    ['payAmount','payDesc','payNotes','payDate','payDue','payMethod','payRef'].forEach(i=>{$(i).value='';});
     await renderAccounts();
     toast('تم تسجيل الدفعة','ok');
   })();

@@ -1,5 +1,5 @@
 /** ============================================================================
- *  نظام منارات المتحدة للمقايسات والتسعير — النسخة الاحترافية v3.4 (نسخة النشر)
+ *  نظام منارات المتحدة للمقايسات والتسعير — النسخة الاحترافية v3.6 (نسخة النشر)
  *  Google Apps Script مرتبط بجدول Google Sheets
  *  متوافق تماماً مع البيانات القديمة: لا يحذف ولا يعدّل أعمدة أو صفوفاً موجودة،
  *  ويضيف فقط أوراقاً وأعمدة جديدة عند الحاجة.
@@ -27,7 +27,7 @@ const H = {
   LOG:      ['التاريخ','المستخدم','العملية','التفاصيل'],
   SETTINGS: ['المفتاح','القيمة'],
   EXPENSES: ['معرف','معرف المشروع','التاريخ','الفئة','البيان','المبلغ','طريقة الصرف','ملاحظات'],
-  PAYMENTS: ['معرف','معرف المشروع','التاريخ','النوع','البيان','المبلغ','ملاحظات'],
+  PAYMENTS: ['معرف','معرف المشروع','التاريخ','النوع','البيان','المبلغ','ملاحظات','تاريخ الاستحقاق','طريقة الدفع','رقم السند'],
   CONTRACTS:['معرف','معرف المشروع','اسم الملف','معرف الملف','الرابط','تاريخ الرفع','المستخدم']
 };
 const EXPENSE_CATS = ['مواد','عمالة','معدات','تشغيل','مقاول باطن','أخرى'];
@@ -1013,24 +1013,52 @@ function removeExpense(projectId, id){
   });
 }
 /* --------------------------- دفعات العميل (التحصيل) ------------------------- */
+/** يحوّل نص تاريخ (yyyy-MM-dd أو dd/MM/yyyy) أو Date إلى Date، أو null */
+function parseDate_(v){
+  if(v instanceof Date && !isNaN(v.getTime())) return v;
+  const t=clean_(v); if(!t) return null;
+  let m=t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m) return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
+  m=t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m) return new Date(Number(m[3]), Number(m[2])-1, Number(m[1]));
+  return null;
+}
+function isoDate_(d){ return d ? Utilities.formatDate(d, Session.getScriptTimeZone(), 'yyyy-MM-dd') : ''; }
+function startOfDay_(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+/** يضيف عناوين أعمدة الدفعات الجديدة (الاستحقاق/الطريقة/السند) في الأوراق القديمة */
+function ensurePaymentColumns_(sh){
+  const want=H.PAYMENTS;
+  if(sh.getLastColumn()<want.length || clean_(sh.getRange(1,8).getValue())!==want[7]){
+    sh.getRange(1,1,1,want.length).setValues([want]);
+  }
+}
 function listPayments(projectId){
   guard_(); check_(projectId);
-  return financeRows_(S.PAYMENTS, projectId).map(r=>({
-    id:String(r[0]), projectId:String(r[1]), date:dateStr_(r[2]), type:String(r[3]||'مستحقة'),
-    description:String(r[4]||''), amount:Number(r[5])||0, notes:String(r[6]||'')
-  }));
+  return financeRows_(S.PAYMENTS, projectId).map(r=>{
+    const dd=parseDate_(r[2]), due=parseDate_(r[7]);
+    return {
+      id:String(r[0]), projectId:String(r[1]), date:dateStr_(r[2]), dateISO:isoDate_(dd),
+      type:String(r[3]||'مستحقة'), description:String(r[4]||''), amount:Number(r[5])||0,
+      notes:String(r[6]||''), dueDate:due?dateStr_(due):'', dueISO:isoDate_(due),
+      method:String(r[8]||''), ref:String(r[9]||'')
+    };
+  });
 }
 function savePayment(d){
   guard_(); obj_(d); check_(d.projectId);
   const amount=number_(d.amount); if(amount<=0) throw Error('أدخل مبلغاً أكبر من صفر');
   const type=PAYMENT_TYPES.indexOf(clean_(d.type))>=0?clean_(d.type):'مستحقة';
+  const when=parseDate_(d.date), due=parseDate_(d.dueDate);
+  if(clean_(d.dueDate)&&!due) throw Error('تاريخ الاستحقاق غير صحيح');
+  if(clean_(d.date)&&!when) throw Error('تاريخ الحركة غير صحيح');
   return locked_(()=>{
-    const sh=tab_(S.PAYMENTS), v=sh.getDataRange().getValues();
+    const sh=tab_(S.PAYMENTS); ensurePaymentColumns_(sh);
+    const v=sh.getDataRange().getValues();
     const id=clean_(d.id)||id_();
     const i=d.id?rowOf_(v,id,d.projectId):-1;
     if(d.id&&i<0) throw Error('السطر غير موجود');
-    const row=[id, String(d.projectId), (i>0&&v[i][2])?v[i][2]:new Date(), type,
-               safe_(d.description), amount, safe_(d.notes)];
+    const row=[id, String(d.projectId), when||((i>0&&v[i][2])?v[i][2]:new Date()), type,
+               safe_(d.description), amount, safe_(d.notes), due||'', safe_(d.method), safe_(d.ref)];
     writeRows_(sh, i>0?i+1:nextRow_(sh), [row]);
     log_(i>0?'تعديل دفعة':'إضافة دفعة', type+' / '+amount+' د.ك');
     return id;
@@ -1092,30 +1120,83 @@ function removeContract(projectId, contractId){
   });
 }
 /* --------------------- ملخص حسابات المشروع (شاشة الحسابات) ------------------ */
+/** جدول الاستحقاقات: يوزّع المحصَّل على المستحقات بالأقدم استحقاقاً (FIFO) ويحدد المتأخر */
+function dueSchedule_(pays){
+  const t0=startOfDay_(new Date()).getTime(), DAY=86400000;
+  const dues=pays.filter(x=>x.type!=='محصلة').map(x=>{
+    const d=parseDate_(x.dueISO||x.dateISO);
+    return Object.assign({}, x, {_t:d?d.getTime():0});
+  }).sort((a,b)=>a._t-b._t);
+  let pool=pays.filter(x=>x.type==='محصلة').reduce((a,x)=>a+x.amount,0);
+  const out=dues.map(x=>{
+    const settled=Math.min(pool, x.amount); pool=round3_(pool-settled);
+    const remaining=round3_(x.amount-settled);
+    let status, daysLate=0, daysLeft=0;
+    if(remaining<=0.0005) status='مسددة';
+    else if(x._t && x._t<t0){ status='متأخرة'; daysLate=Math.round((t0-x._t)/DAY); }
+    else { status=settled>0?'جزئية':'مستحقة'; if(x._t) daysLeft=Math.round((x._t-t0)/DAY); }
+    return {id:x.id, date:x.date, dueDate:x.dueDate||x.date, description:x.description, amount:x.amount,
+            settled:round3_(settled), remaining:remaining, status:status, daysLate:daysLate, daysLeft:daysLeft,
+            partialLate:(remaining>0.0005 && x._t && x._t<t0 && settled>0)};
+  });
+  return {list:out, credit:pool};
+}
+/** كشف حساب العميل بنفس تنسيق كشف الحساب في برنامج حسابات المكتب: مدين/دائن/رصيد تراكمي */
+function clientStatement_(pays){
+  const rows=pays.map(x=>{
+    const d=parseDate_(x.dateISO);
+    return {t:d?d.getTime():0, x:x};
+  }).sort((a,b)=>a.t-b.t || (a.x.type==='محصلة'?1:0)-(b.x.type==='محصلة'?1:0));
+  let bal=0;
+  return rows.map(r=>{
+    const x=r.x, debit=x.type==='محصلة'?0:x.amount, credit=x.type==='محصلة'?x.amount:0;
+    bal=round3_(bal+debit-credit);
+    return {date:x.date, ref:x.ref||'', kind:x.type==='محصلة'?'سداد':'استحقاق',
+            description:x.description+(x.type!=='محصلة'&&x.dueDate?' — مستحقة بتاريخ '+x.dueDate:''),
+            method:x.method, debit:debit, credit:credit, balance:bal, id:x.id};
+  });
+}
 function projectAccounts(projectId){
   guard_(); check_(projectId);
   const p=projects_().find(x=>x.id===String(projectId));
   if(!p) throw Error('المشروع غير موجود');
-  const s=summary_(p, lines_(projectId));
+  const ls=lines_(projectId);
+  const s=summary_(p, ls);
   const ex=listExpenses(projectId), pays=listPayments(projectId);
   const byCat={}; EXPENSE_CATS.forEach(c=>{byCat[c]=0;});
   let spent=0;
   ex.forEach(x=>{ spent+=x.amount; byCat[x.category]=round3_((byCat[x.category]||0)+x.amount); });
   let due=0, paid=0;
   pays.forEach(x=>{ if(x.type==='محصلة') paid+=x.amount; else due+=x.amount; });
+  const sched=dueSchedule_(pays);
+  const overdue=sched.list.filter(x=>x.status==='متأخرة');
+  const overdueAmt=round3_(overdue.reduce((a,x)=>a+x.remaining,0));
+  const upcoming=sched.list.filter(x=>x.status==='مستحقة'||x.status==='جزئية');
+  const upcomingAmt=round3_(upcoming.reduce((a,x)=>a+x.remaining,0));
+  const chap={};
+  ls.forEach(x=>{ const c=chap[x.chapter]||(chap[x.chapter]={chapter:x.chapter,count:0,sales:0,cost:0});
+    c.count++; c.sales=round3_(c.sales+x.total); c.cost=round3_(c.cost+x.costTotal); });
   const contractValue=s.final;
   return {
     project:p, summary:s,
+    byChapter:Object.keys(chap).map(k=>chap[k]),
     expenses:{total:spent, byCategory:byCat, count:ex.length, list:ex},
     payments:{due:due, paid:paid, count:pays.length, list:pays},
+    schedule:sched.list,
+    overdue:{count:overdue.length, amount:overdueAmt, maxDays:overdue.reduce((a,x)=>Math.max(a,x.daysLate),0)},
+    upcoming:{count:upcoming.length, amount:upcomingAmt},
+    statement:clientStatement_(pays),
     contracts:listContracts(projectId),
     accounts:{
       contractValue:contractValue,          // قيمة المقايسة النهائية (العقد التقديري)
       totalReceived:paid,                   // إجمالي المحصَّل من العميل
-      totalDue:due,                         // دفعات مستحقة لم تُحصَّل
+      totalDue:due,                         // إجمالي الدفعات المستحقة (المطالَب بها)
+      dueBalance:round3_(Math.max(due-paid,0)), // المستحق غير المسدَّد فعلاً
+      notYetDue:round3_(contractValue-due), // جزء العقد الذي لم تُصدر له مطالبة بعد
       outstanding:round3_(contractValue-paid), // المتبقي على العميل
       expectedNet:round3_(contractValue-spent), // صافي الربح المتوقع بعد المصروفات
-      costVsSpent:round3_(s.cost-spent)     // فرق تكلفة المقايسة عن المصروف الفعلي
+      costVsSpent:round3_(s.cost-spent),    // فرق تكلفة المقايسة عن المصروف الفعلي
+      cashPosition:round3_(paid-spent)      // السيولة: المحصَّل - المصروف
     }
   };
 }
